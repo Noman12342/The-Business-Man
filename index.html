@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Business Man - Investing Screen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-user-select: none; -ms-user-select: none; user-select: none; }
+        .bg-main-gradient { background-image: linear-gradient(to bottom, #1a2a3a, #f0f4f8); }
+        .card-dark { background-color: #2c3e50; }
+        .hidden { display: none; }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .virtual-card { border-radius: 15px; padding: 20px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        .virtual-card .chip { width: 50px; height: 40px; background: linear-gradient(45deg, #FAD961, #F76B1C); border-radius: 5px; }
+        .virtual-card .card-number { font-family: 'Courier New', Courier, monospace; letter-spacing: 2px; }
+        /* Card Designs */
+        .card-classic { background: linear-gradient(45deg, #6D7B8D, #414A55); }
+        .card-gold { background: linear-gradient(45deg, #FFD700, #DAA520); }
+        .card-platinum { background: linear-gradient(45deg, #E5E4E2, #C0C0C0); color: #333; }
+        .card-signature { background: linear-gradient(45deg, #2C3E50, #000000); }
+        .card-infinite { background: linear-gradient(45deg, #483D8B, #8A2BE2); }
+        .card-standard { background: linear-gradient(45deg, #1E90FF, #4169E1); }
+        .card-mc-gold { background: linear-gradient(45deg, #FFDF00, #FFC72C); }
+        .card-mc-platinum { background: linear-gradient(45deg, #333, #555); }
+        .card-world { background: linear-gradient(45deg, #B22222, #800000); }
+        .card-world-elite { background: linear-gradient(to right, #232526, #414345); }
+    </style>
+</head>
+<body class="bg-main-gradient text-white flex items-center justify-center min-h-screen">
+
+    <!-- Main Game Screen -->
+    <div id="main-game-container" class="w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl">
+        <div class="flex-grow space-y-4 flex flex-col">
+            <div class="flex justify-between items-center text-gray-800 px-2">
+                <div id="game-time-display" class="font-semibold">Day 1, 12:00 AM</div>
+                <div id="real-date-display" class="text-sm"></div>
+            </div>
+            <div id="create-account-button-wrapper" class="card-dark text-white rounded-2xl p-4 shadow-lg flex items-center justify-center">
+                 <button id="bank-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors text-base">Bank</button>
+            </div>
+            <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
+                <p class="text-sm text-gray-500">Total Balance</p>
+                <p id="total-balance-display" class="text-3xl font-bold">$10,000.00</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
+                    <p class="text-sm font-semibold text-gray-600">Investing</p>
+                    <p id="investing-amount" class="text-xl font-bold my-1">$0.00</p>
+                    <p id="investing-roi" class="text-lg font-bold text-gray-500">0.00%</p>
+                </div>
+                <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
+                    <p class="text-sm font-semibold text-gray-600">Business</p>
+                    <p id="business-amount" class="text-xl font-bold my-1">$0.00</p>
+                    <p id="business-roi" class="text-lg font-bold text-gray-500">0.00%</p>
+                </div>
+            </div>
+        </div>
+        <nav class="grid grid-cols-5 gap-2 text-center text-gray-600 mt-4">
+            <button id="investing-nav-btn" class="p-2 rounded-lg"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg><span class="text-xs">Investing</span></button>
+            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg><span class="text-xs">Business</span></a>
+            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 18v-2m0-2v-2m0-2V8m0 10c-1.11 0-2.08-.402-2.599-1M12 18v1m0 1v1m0-2.01M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg><span class="text-xs font-bold">Earnings</span></a>
+            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg><span class="text-xs">Items</span></a>
+            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span class="text-xs">Profile</span></a>
+        </nav>
+    </div>
+    
+    <!-- Investing Screen -->
+    <div id="investing-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
+        <div class="flex items-center mb-4"><button id="back-to-main-from-invest" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 class="text-xl font-bold text-center flex-grow">Investing</h2></div>
+        <div class="flex border-b">
+            <button class="invest-tab-btn flex-1 py-2 text-center text-blue-600 border-b-2 border-blue-600 font-semibold" data-index="0">Shares</button>
+            <button class="invest-tab-btn flex-1 py-2 text-center text-gray-500" data-index="1">Real Estate</button>
+            <button class="invest-tab-btn flex-1 py-2 text-center text-gray-500" data-index="2">Cryptocurrency</button>
+        </div>
+        <div class="flex-grow overflow-hidden"><div id="investment-slider" class="flex h-full w-[300%] transition-transform duration-300 ease-in-out">
+            <div class="w-1/3 p-4 space-y-4">
+                <div id="my-stock-portfolio" class="bg-blue-100 p-4 rounded-lg cursor-pointer"><div class="flex justify-between items-center"><h3 class="font-bold">My stock portfolio</h3><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div><p class="text-xs text-gray-600 mt-2">Value of stock portfolio</p><p id="stock-portfolio-value" class="text-2xl font-bold">$0.00</p><p id="stock-portfolio-roi" class="text-sm text-green-600">+ $0.00 (0.00%) for all time</p><p class="text-xs text-gray-600 mt-2">Estimated yield per hour</p><p id="stock-yield-hour" class="text-lg font-bold">$0.00</p></div>
+                <div id="stock-market" class="bg-blue-500 text-white p-4 rounded-lg cursor-pointer"><div class="flex justify-between items-center"><div><h3 class="font-bold">Stock market</h3><p class="text-sm">View all available offers</p></div><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div></div>
+            </div>
+            <div class="w-1/3 p-4 flex items-center justify-center"><p class="text-gray-500">Real Estate investments coming soon!</p></div>
+            <div class="w-1/3 p-4 flex items-center justify-center"><p class="text-gray-500">Cryptocurrency investments coming soon!</p></div>
+        </div></div>
+    </div>
+    
+    <!-- Other Screens and Modals... -->
+    <div id="bank-list-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
+        <div class="flex items-center mb-4"><button id="back-to-main" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 class="text-xl font-bold text-center flex-grow">Select a Bank</h2></div>
+        <div id="bank-list-container" class="overflow-y-auto space-y-2"></div>
+    </div>
+    <div id="bank-details-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
+        <div class="flex items-center mb-4"><button id="back-to-list" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 id="bank-details-name" class="text-xl font-bold text-center flex-grow">Bank Details</h2></div>
+        <div id="bank-details-content" class="flex-grow flex flex-col items-center space-y-4 overflow-y-auto w-full"></div>
+    </div>
+    <div id="letter-modal" class="hidden modal-overlay p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="letter-bank-name" class="text-xl font-bold text-center">Welcome!</h3><p id="letter-text" class="text-sm text-gray-600 leading-relaxed"></p><div class="flex justify-end space-x-3"><button id="letter-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="letter-agree" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Agree & Pay $1,000</button></div></div>
+    </div>
+    <div id="loan-letter-modal" class="hidden modal-overlay p-4">
+        <div class="bg-gray-800 text-white rounded-lg shadow-2xl p-6 max-w-sm w-full space-y-4 overflow-y-auto" style="max-height: 90vh;"><div id="loan-summary-content"></div><div class="flex justify-end space-x-3 pt-2"><button id="loan-letter-cancel" class="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button><button id="loan-letter-agree" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Agree & Take Loan</button></div></div>
+    </div>
+    <div id="card-letter-modal" class="hidden modal-overlay p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="card-letter-title" class="text-xl font-bold text-center">Card Application</h3><p id="card-letter-text" class="text-sm text-gray-600 leading-relaxed"></p><input type="text" id="card-holder-name-input" placeholder="Your Name on Card" class="w-full p-2 border rounded-md"><div class="flex justify-end space-x-3"><button id="card-letter-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="card-letter-agree" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"></button></div></div>
+    </div>
+    <div id="fix-deposit-modal" class="hidden modal-overlay p-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="fd-title" class="text-xl font-bold text-center">Fix Deposit</h3><p id="fd-info" class="text-sm text-gray-500 text-center"></p><input type="number" id="fd-amount-input" placeholder="Amount" class="w-full p-2 border rounded-md"><div class="flex justify-end space-x-3"><button id="fd-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="fd-ok" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">OK</button></div></div>
+    </div>
+    <div id="notification-popup" class="hidden fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-500 text-white p-4 rounded-lg shadow-xl text-center"></div>
+
+    <script>
+        // All JavaScript code remains the same as the previous correct version.
+        // No changes needed in the script for this layout adjustment.
+        // --- DOM Elements ---
+        const mainGameContainer = document.getElementById('main-game-container');
+        const investingScreen = document.getElementById('investing-screen');
+        const bankListScreen = document.getElementById('bank-list-screen');
+        const bankDetailsScreen = document.getElementById('bank-details-screen');
+        const letterModal = document.getElementById('letter-modal');
+        const loanLetterModal = document.getElementById('loan-letter-modal');
+        const cardLetterModal = document.getElementById('card-letter-modal');
+        const fixDepositModal = document.getElementById('fix-deposit-modal');
+        const notificationPopup = document.getElementById('notification-popup');
+        const bankButton = document.getElementById('bank-button');
+        const totalBalanceDisplay = document.getElementById('total-balance-display');
+        const investingAmountDisplay = document.getElementById('investing-amount');
+        const investingRoiDisplay = document.getElementById('investing-roi');
+        const businessAmountDisplay = document.getElementById('business-amount');
+        const businessRoiDisplay = document.getElementById('business-roi');
+        const backToMainButton = document.getElementById('back-to-main');
+        const bankListContainer = document.getElementById('bank-list-container');
+        const backToListButton = document.getElementById('back-to-list');
+        const bankDetailsName = document.getElementById('bank-details-name');
+        const bankDetailsContent = document.getElementById('bank-details-content');
+        const letterBankName = document.getElementById('letter-bank-name');
+        const letterText = document.getElementById('letter-text');
+        const letterCancelButton = document.getElementById('letter-cancel');
+        const letterAgreeButton = document.getElementById('letter-agree');
+        const loanSummaryContent = document.getElementById('loan-summary-content');
+        const loanLetterCancelButton = document.getElementById('loan-letter-cancel');
+        const loanLetterAgreeButton = document.getElementById('loan-letter-agree');
+        const cardLetterTitle = document.getElementById('card-letter-title');
+        const cardLetterText = document.getElementById('card-letter-text');
+        const cardHolderNameInput = document.getElementById('card-holder-name-input');
+        const cardLetterCancelButton = document.getElementById('card-letter-cancel');
+        const cardLetterAgreeButton = document.getElementById('card-letter-agree');
+        const gameTimeDisplay = document.getElementById('game-time-display');
+        const realDateDisplay = document.getElementById('real-date-display');
+        const fdTitle = document.getElementById('fd-title');
+        const fdInfo = document.getElementById('fd-info');
+        const fdAmountInput = document.getElementById('fd-amount-input');
+        const fdCancel = document.getElementById('fd-cancel');
+        const fdOk = document.getElementById('fd-ok');
+        const investingNavBtn = document.getElementById('investing-nav-btn');
+        const backToMainFromInvest = document.getElementById('back-to-main-from-invest');
+        const investmentSlider = document.getElementById('investment-slider');
+        const investTabBtns = document.querySelectorAll('.invest-tab-btn');
+        const stockPortfolioValue = document.getElementById('stock-portfolio-value');
+        const stockPortfolioRoi = document.getElementById('stock-portfolio-roi');
+        const stockYieldHour = document.getElementById('stock-yield-hour');
+        const myStockPortfolioBtn = document.getElementById('my-stock-portfolio');
+        const stockMarketBtn = document.getElementById('stock-market');
+
+        // --- Game State ---
+        let gameState = {
+            cash: 10000,
+            investingAmount: 0,
+            initialInvestment: 0,
+            businessAmount: 0,
+            openedAccounts: {}, 
+            gameDaysElapsed: 0,
+            get totalBalance() { return this.cash + this.investingAmount + this.businessAmount; },
+            investingCumulativeRoi: 0,
+            businessCumulativeRoi: 0
+        };
+
+        // --- Data ---
+        const famousBanksOfBangladesh = ["Sonali Bank", "Janata Bank", "Agrani Bank", "Rupali Bank", "BASIC Bank", "Bangladesh Krishi Bank", "Dutch-Bangla Bank", "BRAC Bank", "The City Bank", "Eastern Bank", "Islami Bank Bangladesh", "Prime Bank", "Mutual Trust Bank", "National Bank", "Pubali Bank", "Southeast Bank", "Standard Chartered Bangladesh", "HSBC Bangladesh", "Bank Asia", "United Commercial Bank"];
+        const visaDebitCardTiers = [
+            { name: "Classic Visa Debit Card", type: 'debit', minBalance: 0, maxBalance: 100000, fee: 500, designClass: 'card-classic' },
+            { name: "Gold Visa Debit Card", type: 'debit', minBalance: 100001, maxBalance: 500000, fee: 1000, designClass: 'card-gold' },
+            { name: "Platinum Visa Debit Card", type: 'debit', minBalance: 500001, maxBalance: 1000000, fee: 2000, designClass: 'card-platinum' },
+            { name: "Signature Visa Debit Card", type: 'debit', minBalance: 1000001, maxBalance: 10000000, fee: 5000, designClass: 'card-signature' },
+            { name: "Infinite Visa Debit Card", type: 'debit', minBalance: 10000001, maxBalance: Infinity, fee: 20000, designClass: 'card-infinite' }
+        ];
+        const masterDebitCardTiers = [
+            { name: "Standard Master Debit Card", type: 'debit', minBalance: 0, maxBalance: 100000, fee: 500, designClass: 'card-standard' },
+            { name: "Gold Master Debit Card", type: 'debit', minBalance: 100001, maxBalance: 500000, fee: 1000, designClass: 'card-mc-gold' },
+            { name: "Platinum Master Debit Card", type: 'debit', minBalance: 500001, maxBalance: 1000000, fee: 2000, designClass: 'card-mc-platinum' },
+            { name: "World Master Debit Card", type: 'debit', minBalance: 1000001, maxBalance: 10000000, fee: 5000, designClass: 'card-world' },
+            { name: "World Elite Master Debit Card", type: 'debit', minBalance: 10000001, maxBalance: Infinity, fee: 20000, designClass: 'card-world-elite' }
+        ];
+        const visaCreditCardTiers = visaDebitCardTiers.map(tier => ({...tier, name: tier.name.replace('Debit', 'Credit'), type: 'credit'}));
+        const masterCreditCardTiers = masterDebitCardTiers.map(tier => ({...tier, name: tier.name.replace('Debit', 'Credit'), type: 'credit'}));
+        const fdTiers = [
+            { tenure: "3 Month", months: 3, days: 90, min: 1000, max: 100000, rate: 5.5 },
+            { tenure: "6 Month", months: 6, days: 180, min: 10000, max: 300000, rate: 6.0 },
+            { tenure: "1 Year", months: 12, days: 365, min: 100000, max: 500000, rate: 7.0 },
+            { tenure: "3 Year", months: 36, days: 1095, min: 300000, max: 1000000, rate: 8.0 },
+            { tenure: "5 Year", months: 60, days: 1825, min: 500000, max: 1000000, rate: 9.0 },
+            { tenure: "10 Year", months: 120, days: 3650, min: 500000, max: 10000000, rate: 10.0 }
+        ];
+
+        
+        // --- Utility Functions ---
+        function formatCurrency(num) { return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        
+        function showNotification(message, duration = 2000, isSuccess = true) {
+            notificationPopup.textContent = message;
+            notificationPopup.className = `fixed top-20 left-1/2 -translate-x-1/2 text-white p-4 rounded-lg shadow-xl text-center z-50 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+            notificationPopup.classList.remove('hidden');
+            setTimeout(() => { notificationPopup.classList.add('hidden'); }, duration);
+        }
+        
+        // --- Time System ---
+        function updateGameTime() {
+            const now = new Date();
+            realDateDisplay.textContent = now.toLocaleDateString();
+            let gameStartDate = localStorage.getItem('gameStartDate');
+            if (!gameStartDate) {
+                gameStartDate = now.getTime();
+                localStorage.setItem('gameStartDate', gameStartDate);
+            }
+            const realTimeElapsedMs = now.getTime() - parseInt(gameStartDate, 10);
+            const msInOneGameDay = 5 * 60 * 1000;
+            gameState.gameDaysElapsed = Math.floor(realTimeElapsedMs / msInOneGameDay);
+            const msIntoCurrentGameDay = realTimeElapsedMs % msInOneGameDay;
+            const gameHours = Math.floor((msIntoCurrentGameDay / msInOneGameDay) * 24);
+            const gameMinutes = Math.floor(((msIntoCurrentGameDay / msInOneGameDay) * 24 * 60) % 60);
+            const ampm = gameHours >= 12 ? 'PM' : 'AM';
+            let displayHours = gameHours % 12;
+            if (displayHours === 0) displayHours = 12;
+            gameTimeDisplay.textContent = `Day ${gameState.gameDaysElapsed + 1}, ${String(displayHours).padStart(2, '0')}:${String(gameMinutes).padStart(2, '0')} ${ampm}`;
+        }
+
+        // --- UI Update & Navigation ---
+        function updateAllUI() {
+            totalBalanceDisplay.textContent = formatCurrency(gameState.totalBalance);
+            investingAmountDisplay.textContent = formatCurrency(gameState.investingAmount);
+            businessAmountDisplay.textContent = formatCurrency(gameState.businessAmount);
+            const updateRoiDisplay = (element, roi) => {
+                const roiText = (roi >= 0 ? '+' : '') + roi.toFixed(2) + '%';
+                element.textContent = roiText;
+                element.style.color = roi > 0 ? '#22c55e' : roi < 0 ? '#ef4444' : '#6b7280';
+            };
+            updateRoiDisplay(investingRoiDisplay, gameState.investingCumulativeRoi);
+            updateRoiDisplay(businessRoiDisplay, gameState.businessCumulativeRoi);
+            
+            stockPortfolioValue.textContent = formatCurrency(gameState.investingAmount);
+            const profitLoss = gameState.investingAmount - gameState.initialInvestment;
+            const profitLossPercent = gameState.initialInvestment > 0 ? (profitLoss / gameState.initialInvestment) * 100 : 0;
+            const roiColor = profitLoss >= 0 ? 'text-green-600' : 'text-red-600';
+            stockPortfolioRoi.className = `text-sm ${roiColor}`;
+            stockPortfolioRoi.textContent = `${profitLoss >= 0 ? '+' : ''} ${formatCurrency(profitLoss)} (${profitLossPercent.toFixed(2)}%) for all time`;
+            stockYieldHour.textContent = formatCurrency(gameState.investingAmount * 0.0001);
+        }
+
+        function showScreen(screenId) {
+            ['main-game-container', 'investing-screen', 'bank-list-screen', 'bank-details-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+        
+        function showBankList() {
+            backToListButton.onclick = showBankList;
+            bankListContainer.innerHTML = '';
+            famousBanksOfBangladesh.forEach(bankName => {
+                const bankButton = document.createElement('button');
+                bankButton.className = 'w-full text-left p-3 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors';
+                bankButton.textContent = bankName;
+                if (gameState.openedAccounts[bankName]) {
+                    bankButton.classList.add('font-bold', 'text-green-600');
+                }
+                bankButton.addEventListener('click', () => showBankDetails(bankName));
+                bankListContainer.appendChild(bankButton);
+            });
+            showScreen('bank-list-screen');
+        }
+
+        function showBankDetails(bankName) {
+            bankDetailsName.textContent = bankName;
+            bankDetailsContent.innerHTML = '';
+            backToListButton.onclick = showBankList;
+
+            if (gameState.openedAccounts[bankName]) {
+                const account = gameState.openedAccounts[bankName];
+                const annualFee = (account.balance || 0) * 0.01 + 700;
+                
+                let cardHTML = '';
+                if(account.cards && account.cards.length > 0) {
+                     account.cards.forEach(card => {
+                        cardHTML += createVirtualCardElement(card);
+                        if(card.type === 'credit') {
+                            cardHTML += createCreditCardStatementHTML(card);
+                        }
+                    });
+                }
+                
+                let fdHTML = '';
+                if(account.fixDeposits && account.fixDeposits.length > 0) {
+                    fdHTML += '<div class="mt-4 w-full text-left text-sm text-gray-800 bg-gray-100 p-3 rounded-lg"><h4 class="font-bold mb-2">Fix Deposits</h4>';
+                    account.fixDeposits.forEach((fd, index) => {
+                        fdHTML += createFixDepositStatementHTML(fd, bankName, index);
+                    });
+                    fdHTML += '</div>';
+                }
+
+                bankDetailsContent.innerHTML = `
+                    <div class="text-center w-full space-y-3">
+                        <div><p class="text-sm text-gray-500">Bank Balance</p><p class="text-4xl font-bold">${formatCurrency(account.balance)}</p></div>
+                        <button id="fd-button" class="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Fix-deposit</button>
+                        <button id="card-details-button" class="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Card</button>
+                        <button id="loan-details-button" class="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Loan</button>
+                        <div class="pt-4"><p class="text-sm text-gray-500">Annual Fee</p><p class="text-lg font-semibold">${formatCurrency(annualFee)}</p></div>
+                        <div class="w-full">${cardHTML}${fdHTML}</div>
+                    </div>`;
+                document.getElementById('fd-button').addEventListener('click', () => handleFixDepositClick(bankName));
+                document.getElementById('card-details-button').addEventListener('click', () => handleCardButtonClick(bankName));
+                document.getElementById('loan-details-button').addEventListener('click', () => showLoanOptions(bankName));
+
+            } else {
+                const openAccountBtn = document.createElement('button');
+                openAccountBtn.id = 'open-account-btn-details';
+                openAccountBtn.className = 'px-8 py-4 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 text-xl';
+                openAccountBtn.textContent = 'Account Open';
+                openAccountBtn.addEventListener('click', () => showLetter(bankName));
+                bankDetailsContent.appendChild(openAccountBtn);
+            }
+            showScreen('bank-details-screen');
+        }
+
+        function showLetter(bankName) {
+            letterBankName.textContent = `Welcome to ${bankName}`;
+            letterText.innerHTML = `We are delighted to welcome you as a valued customer of <strong>${bankName}</strong>. Please note that an account opening fee of <strong>$1,000</strong> has been charged.`;
+            letterAgreeButton.onclick = () => openAccount(bankName);
+            letterModal.classList.remove('hidden');
+        }
+
+        // --- Card Logic ---
+        function handleCardButtonClick(bankName) { showCardOptions(bankName); }
+        function showCardOptions(bankName) {
+            bankDetailsName.textContent = 'Select Card Type';
+            backToListButton.onclick = () => showBankDetails(bankName);
+            bankDetailsContent.innerHTML = `<div class="w-full space-y-3"></div>`;
+            const container = bankDetailsContent.querySelector('div');
+            const cardTypes = [
+                {name: 'Visa Debit Card', action: () => showCardTiers(bankName, visaDebitCardTiers)},
+                {name: 'Master Debit card', action: () => showCardTiers(bankName, masterDebitCardTiers)},
+                {name: 'Visa Credit card', action: () => showCardTiers(bankName, visaCreditCardTiers)},
+                {name: 'Master Credit card', action: () => showCardTiers(bankName, masterCreditCardTiers)}
+            ];
+            cardTypes.forEach((type) => {
+                const button = document.createElement('button');
+                button.className = 'w-full p-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600';
+                button.textContent = type.name;
+                button.addEventListener('click', type.action);
+                container.appendChild(button);
+            });
+        }
+        function showCardTiers(bankName, cardTiers) {
+             bankDetailsName.textContent = 'Select Card';
+             backToListButton.onclick = () => showCardOptions(bankName);
+             bankDetailsContent.innerHTML = `<div class="w-full space-y-3"></div>`;
+             const container = bankDetailsContent.querySelector('div');
+             const currentBalance = gameState.totalBalance;
+             cardTiers.forEach(cardTier => {
+                const button = document.createElement('button');
+                button.className = 'w-full p-3 bg-sky-500 text-white rounded-lg';
+                button.textContent = `${cardTier.name} (Fee: ${formatCurrency(cardTier.fee)})`;
+                const isEligible = currentBalance >= cardTier.minBalance && currentBalance <= cardTier.maxBalance;
+                if(isEligible) {
+                    button.classList.add('hover:bg-sky-600');
+                    button.addEventListener('click', () => showCardApplicationLetter(cardTier, bankName));
+                } else {
+                    button.classList.add('opacity-50', 'cursor-not-allowed');
+                    button.title = `Requires a balance between ${formatCurrency(cardTier.minBalance)} and ${formatCurrency(cardTier.maxBalance)}`;
+                }
+                container.appendChild(button);
+             });
+        }
+        function showCardApplicationLetter(cardTier, bankName) {
+            cardLetterTitle.textContent = `Apply for ${cardTier.name}`;
+            cardLetterText.textContent = `Welcome to a world of convenience with your new ${cardTier.name}! Enjoy secure shopping, easy ATM access, and seamless online payments. Card valid 10 Years and Card Yearly fee ${formatCurrency(cardTier.fee)}.`;
+            cardHolderNameInput.value = '';
+            cardLetterAgreeButton.textContent = `Agree & Get Card (${formatCurrency(cardTier.fee)} Fee)`;
+            cardLetterAgreeButton.onclick = () => applyForCard(cardTier, bankName);
+            cardLetterModal.classList.remove('hidden');
+        }
+        function applyForCard(cardTier, bankName) {
+            const holderName = cardHolderNameInput.value.trim();
+            if (!holderName) { return showNotification("Please enter a name for the card.", 2000, false); }
+            if (gameState.cash < cardTier.fee) { return showNotification("Insufficient cash for card fee.", 2000, false); }
+            if (gameState.openedAccounts[bankName].cards && gameState.openedAccounts[bankName].cards.some(c => c.cardName === cardTier.name)) {
+                return showNotification(`You already have a ${cardTier.name}.`, 2000, false);
+            }
+            gameState.cash -= cardTier.fee;
+            const newCard = {
+                cardName: cardTier.name,
+                holderName: holderName,
+                designClass: cardTier.designClass,
+                type: cardTier.type,
+                number: (cardTier.name.includes('Visa') ? '4' : '5') + Array.from({length: 15}, () => Math.floor(Math.random() * 10)).join(''),
+                expiry: `${String(new Date().getMonth() + 1).padStart(2, '0')}/${String(new Date().getFullYear() + 10).slice(-2)}`,
+                cvc: String(Math.floor(100 + Math.random() * 900))
+            };
+            if (newCard.type === 'credit') {
+                newCard.transactions = [];
+                newCard.outstandingBalance = 0;
+            }
+            if (!gameState.openedAccounts[bankName].cards) gameState.openedAccounts[bankName].cards = [];
+            gameState.openedAccounts[bankName].cards.push(newCard);
+            cardLetterModal.classList.add('hidden');
+            showNotification('Congratulations! Your new card has been issued.', 3000, true);
+            showBankDetails(bankName);
+            updateAllUI();
+        }
+        function createVirtualCardElement(cardData) {
+            const shortName = cardData.cardName.replace(' Debit Card', '').replace(' Credit Card', '');
+            return `<div class="virtual-card w-full space-y-3 mt-4 ${cardData.designClass}"><div class="flex justify-between items-start"><p class="font-bold text-lg">${shortName}</p><div class="chip"></div></div><p class="card-number text-xl tracking-widest">${cardData.number.replace(/(\d{4})/g, '$1 ').trim()}</p><div class="flex justify-between text-sm"><div><p class="text-xs">Card Holder</p><p>${cardData.holderName.toUpperCase()}</p></div><div><p class="text-xs">Expires</p><p>${cardData.expiry}</p></div><div><p class="text-xs">CVC</p><p>${cardData.cvc}</p></div></div></div>`;
+        }
+        function createCreditCardStatementHTML(card) {
+            let statementHTML = `<div class="mt-4 w-full text-left text-sm text-gray-800 bg-gray-100 p-3 rounded-lg"><h4 class="font-bold mb-2">Credit Card Statement</h4>`;
+            if (!card.transactions || card.transactions.length === 0) {
+                statementHTML += '<p class="text-gray-500">No transactions yet.</p>';
+            } else {
+                statementHTML += `<table class="w-full"><thead><tr class="border-b"><th class="text-left py-1">Date</th><th class="text-left py-1">Description</th><th class="text-right py-1">Amount</th></tr></thead><tbody>`;
+                card.transactions.forEach(tx => {
+                    statementHTML += `<tr><td class="py-1">${new Date(tx.date).toLocaleDateString()}</td><td class="py-1">${tx.item}</td><td class="text-right py-1">${formatCurrency(tx.amount)}</td></tr>`;
+                });
+                statementHTML += `</tbody></table>`;
+            }
+            const interestRate = 0.18;
+            const interestFee = card.outstandingBalance * interestRate;
+            const paymentDueDate = new Date();
+            paymentDueDate.setDate(paymentDueDate.getDate() + 20);
+            statementHTML += `<div class="mt-4 border-t pt-2 space-y-1"><p><strong>Total Outstanding:</strong> ${formatCurrency(card.outstandingBalance)}</p><p><strong>Potential Interest Fee:</strong> ${formatCurrency(interestFee)}</p><p><strong>Payment Due:</strong> ${paymentDueDate.toLocaleDateString()}</p></div></div>`;
+            return statementHTML;
+        }
+        
+        // --- Fix Deposit Logic ---
+        function handleFixDepositClick(bankName) {
+            bankDetailsName.textContent = 'Fix Deposit';
+            backToListButton.onclick = () => showBankDetails(bankName);
+            bankDetailsContent.innerHTML = `<button class="px-8 py-4 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 text-xl" id="open-fd-btn">Open Fix-deposit</button>`;
+            document.getElementById('open-fd-btn').addEventListener('click', () => showFixDepositTiers(bankName));
+        }
+        function showFixDepositTiers(bankName) {
+            bankDetailsName.textContent = 'Select FD Tenure';
+            backToListButton.onclick = () => handleFixDepositClick(bankName);
+            bankDetailsContent.innerHTML = '<div class="w-full space-y-3"></div>';
+            const container = bankDetailsContent.querySelector('div');
+            fdTiers.forEach(tier => {
+                const button = document.createElement('button');
+                button.className = 'w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600';
+                button.textContent = `${tier.tenure} at ${tier.rate}%`;
+                button.addEventListener('click', () => showFixDepositAmountInput(tier, bankName));
+                container.appendChild(button);
+            });
+        }
+        function showFixDepositAmountInput(tier, bankName) {
+            fdTitle.textContent = `Deposit for ${tier.tenure}`;
+            fdInfo.textContent = `Interest: ${tier.rate}%. Amount: ${formatCurrency(tier.min)} to ${formatCurrency(tier.max)}.`;
+            fdAmountInput.value = '';
+            fdAmountInput.min = tier.min;
+            fdAmountInput.max = tier.max;
+            fdOk.onclick = () => createFixDeposit(tier, bankName);
+            fixDepositModal.classList.remove('hidden');
+        }
+        function createFixDeposit(tier, bankName) {
+            const amount = parseFloat(fdAmountInput.value);
+            if (isNaN(amount) || amount < tier.min || amount > tier.max) {
+                return showNotification(`Please enter an amount between ${formatCurrency(tier.min)} and ${formatCurrency(tier.max)}.`, 2500, false);
+            }
+            if (gameState.cash < amount) {
+                return showNotification('Insufficient cash for this deposit.', 2000, false);
+            }
+            gameState.cash -= amount;
+            const newFd = {
+                amount: amount,
+                rate: tier.rate,
+                tenure: tier.tenure,
+                creationDay: gameState.gameDaysElapsed,
+                maturityDay: gameState.gameDaysElapsed + tier.days,
+                claimed: false
+            };
+            if (!gameState.openedAccounts[bankName].fixDeposits) {
+                gameState.openedAccounts[bankName].fixDeposits = [];
+            }
+            gameState.openedAccounts[bankName].fixDeposits.push(newFd);
+            fixDepositModal.classList.add('hidden');
+            showNotification('Fix Deposit created successfully!', 2000, true);
+            showBankDetails(bankName);
+            updateAllUI();
+        }
+        function createFixDepositStatementHTML(fd, bankName, index) {
+             const totalProfit = fd.amount * (fd.rate / 100) * (fdTiers.find(t => t.tenure === fd.tenure).months / 12);
+             const isMatured = gameState.gameDaysElapsed >= fd.maturityDay;
+             const daysRemaining = fd.maturityDay - gameState.gameDaysElapsed;
+             let maturityInfoHTML = '';
+             let claimButtonHTML = '';
+
+             if (isMatured) {
+                 maturityInfoHTML = `<p class="font-semibold text-green-600">Maturity Date: Day ${fd.maturityDay} (Matured!)</p>`;
+                 claimButtonHTML = `<button class="mt-2 w-full p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 claim-fd-btn" data-index="${index}" data-bank="${bankName}">Claim</button>`;
+             } else {
+                 maturityInfoHTML = `<p><strong>Maturity:</strong> Day ${fd.maturityDay} (${daysRemaining} days remaining)</p>`;
+             }
+             return `<div class="border-t pt-2 mt-2"><p><strong>Amount:</strong> ${formatCurrency(fd.amount)}</p><p><strong>Tenure:</strong> ${fd.tenure} at ${fd.rate}%</p><p><strong>Total Profit:</strong> ${formatCurrency(totalProfit)}</p>${maturityInfoHTML}${claimButtonHTML}</div>`;
+        }
+        function claimFixDeposit(bankName, index) {
+            const account = gameState.openedAccounts[bankName];
+            const fd = account.fixDeposits[index];
+            if (!fd || gameState.gameDaysElapsed < fd.maturityDay || fd.claimed) return;
+            const totalProfit = fd.amount * (fd.rate / 100) * (fdTiers.find(t => t.tenure === fd.tenure).months / 12);
+            const claimAmount = fd.amount + totalProfit;
+            gameState.cash += claimAmount;
+            account.fixDeposits.splice(index, 1);
+            showNotification(`${formatCurrency(claimAmount)} has been added to your cash balance.`, 3000, true);
+            showBankDetails(bankName);
+            updateAllUI();
+        }
+
+        // --- Core Game Logic ---
+        function openAccount(bankName) {
+            const fee = 1000;
+            if (gameState.cash >= fee) {
+                gameState.cash -= fee;
+                gameState.openedAccounts[bankName] = { balance: 0 };
+                letterModal.classList.add('hidden');
+                showNotification(`Congratulations! Your ${bankName} account is open.`, 3000, true);
+                showBankDetails(bankName);
+                updateAllUI();
+            } else {
+                letterModal.classList.add('hidden');
+                showNotification('Insufficient funds to open an account.', 2000, false);
+            }
+        }
+        function simulateMarketAndCardUsage() {
+            if (gameState.investingAmount > 0) {
+                const investFluctuation = (Math.random() * 1.2) - 0.5;
+                gameState.investingAmount += gameState.investingAmount * (investFluctuation / 100);
+                gameState.investingCumulativeRoi += investFluctuation; 
+            }
+            if (gameState.businessAmount > 0) {
+                const businessFluctuation = (Math.random() * 1.2) - 0.3;
+                gameState.businessAmount += gameState.businessAmount * (businessFluctuation / 100);
+                gameState.businessCumulativeRoi += businessFluctuation;
+            }
+            for (const bankName in gameState.openedAccounts) {
+                const account = gameState.openedAccounts[bankName];
+                if (account.cards) {
+                    account.cards.forEach(card => {
+                        if (card.type === 'credit' && Math.random() < 0.1) {
+                            const itemPrice = Math.floor(Math.random() * 200) + 20;
+                            if (!card.outstandingBalance) card.outstandingBalance = 0;
+                            card.outstandingBalance += itemPrice;
+                            if (!card.transactions) card.transactions = [];
+                            card.transactions.push({ item: "Online Purchase", amount: itemPrice, date: new Date() });
+                        }
+                    });
+                }
+            }
+            let needsRefresh = !document.getElementById('bank-details-screen').classList.contains('hidden');
+            if (needsRefresh) {
+                showBankDetails(bankDetailsName.textContent);
+            }
+            updateAllUI();
+        }
+        function calculateEMI(p, r, n) { const monthlyRate = r / (12 * 100); return (p * monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1); }
+        function showLoanOptions(bankName) {
+            bankDetailsName.textContent = 'Apply for a Loan';
+            backToListButton.onclick = () => showBankDetails(bankName);
+            bankDetailsContent.innerHTML = '<div class="w-full space-y-3"></div>';
+            const container = bankDetailsContent.querySelector('div');
+            const loanAmounts = [10000, 30000, 50000, 100000, 200000];
+            loanAmounts.forEach(amount => {
+                const button = document.createElement('button');
+                button.className = 'w-full p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600';
+                button.textContent = `Get a ${formatCurrency(amount)} Loan`;
+                button.addEventListener('click', () => showLoanLetter(amount, bankName));
+                container.appendChild(button);
+            });
+        }
+        function showLoanLetter(amount, bankName) {
+            const interestRates = { 1: 10, 2: 11, 3: 12, 4: 13, 5: 14 };
+            let tableRows = '';
+            for (const year in interestRates) {
+                const rate = interestRates[year];
+                const months = year * 12;
+                const emi = calculateEMI(amount, rate, months);
+                const totalRepayment = emi * months;
+                const totalInterest = totalRepayment - amount;
+                tableRows += `<tr class="border-b border-gray-700"><td class="p-2 text-center">${year}y</td><td class="p-2 text-center">${rate}%</td><td class="p-2 text-center">${formatCurrency(emi)}</td><td class="p-2 text-center">${formatCurrency(totalRepayment)}</td><td class="p-2 text-center text-red-400">${formatCurrency(totalInterest)}</td></tr>`;
+            }
+            loanSummaryContent.innerHTML = `<h3 class="text-xl font-bold text-center mb-2">Loan Summary</h3><div class="text-sm space-y-1 mb-4"><p><strong>Loan Amount:</strong> ${formatCurrency(amount)}</p></div><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-gray-700"><th class="p-2">Tenure</th><th class="p-2">Rate</th><th class="p-2">EMI</th><th class="p-2">Total Pay</th><th class="p-2">Interest</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+            loanLetterAgreeButton.onclick = () => takeLoan(amount, bankName);
+            loanLetterModal.classList.remove('hidden');
+        }
+        function takeLoan(amount, bankName) {
+            gameState.cash += amount;
+            if (!gameState.openedAccounts[bankName].loans) gameState.openedAccounts[bankName].loans = [];
+            gameState.openedAccounts[bankName].loans.push({ amount, date: new Date() });
+            loanLetterModal.classList.add('hidden');
+            showNotification(`Congratulations! A loan of ${formatCurrency(amount)} has been credited.`, 3000, true);
+            showBankDetails(bankName);
+            updateAllUI();
+        }
+
+        // --- Event Delegation for Dynamic Content ---
+        document.body.addEventListener('click', function(event) {
+            if (event.target.classList.contains('claim-fd-btn')) {
+                const bankName = event.target.dataset.bank;
+                const index = parseInt(event.target.dataset.index, 10);
+                claimFixDeposit(bankName, index);
+            }
+        });
+
+        // --- Event Listeners ---
+        bankButton.addEventListener('click', showBankList);
+        investingNavBtn.addEventListener('click', () => showScreen('investing-screen'));
+        backToMainButton.addEventListener('click', () => showScreen('main-game-container'));
+        backToMainFromInvest.addEventListener('click', () => showScreen('main-game-container'));
+        backToListButton.addEventListener('click', showBankList);
+        letterCancelButton.addEventListener('click', () => letterModal.classList.add('hidden'));
+        loanLetterCancelButton.addEventListener('click', () => loanLetterModal.classList.add('hidden'));
+        cardLetterCancelButton.addEventListener('click', () => cardLetterModal.classList.add('hidden'));
+        fdCancel.addEventListener('click', () => fixDepositModal.classList.add('hidden'));
+        myStockPortfolioBtn.addEventListener('click', () => showNotification('Portfolio details coming soon!'));
+        stockMarketBtn.addEventListener('click', () => showNotification('Stock Market coming soon!'));
+        investTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                investTabBtns.forEach(b => b.classList.remove('text-blue-600', 'border-blue-600', 'font-semibold'));
+                btn.classList.add('text-blue-600', 'border-blue-600', 'font-semibold');
+                investmentSlider.style.transform = `translateX(-${parseInt(btn.dataset.index) * 100 / 3}%)`;
+            });
+        });
+
+        // --- Initial Load ---
+        window.onload = () => {
+            updateAllUI();
+            updateGameTime();
+            setInterval(updateGameTime, 1000);
+            setInterval(simulateMarketAndCardUsage, 3000);
+        };
+    </script>
+</body>
+</html>
