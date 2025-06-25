@@ -1,649 +1,328 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Business Man - Investing Screen</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; -webkit-user-select: none; -ms-user-select: none; user-select: none; }
-        .bg-main-gradient { background-image: linear-gradient(to bottom, #1a2a3a, #f0f4f8); }
-        .card-dark { background-color: #2c3e50; }
-        .hidden { display: none; }
-        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .virtual-card { border-radius: 15px; padding: 20px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
-        .virtual-card .chip { width: 50px; height: 40px; background: linear-gradient(45deg, #FAD961, #F76B1C); border-radius: 5px; }
-        .virtual-card .card-number { font-family: 'Courier New', Courier, monospace; letter-spacing: 2px; }
-        /* Card Designs */
-        .card-classic { background: linear-gradient(45deg, #6D7B8D, #414A55); }
-        .card-gold { background: linear-gradient(45deg, #FFD700, #DAA520); }
-        .card-platinum { background: linear-gradient(45deg, #E5E4E2, #C0C0C0); color: #333; }
-        .card-signature { background: linear-gradient(45deg, #2C3E50, #000000); }
-        .card-infinite { background: linear-gradient(45deg, #483D8B, #8A2BE2); }
-        .card-standard { background: linear-gradient(45deg, #1E90FF, #4169E1); }
-        .card-mc-gold { background: linear-gradient(45deg, #FFDF00, #FFC72C); }
-        .card-mc-platinum { background: linear-gradient(45deg, #333, #555); }
-        .card-world { background: linear-gradient(45deg, #B22222, #800000); }
-        .card-world-elite { background: linear-gradient(to right, #232526, #414345); }
-    </style>
-</head>
-<body class="bg-main-gradient text-white flex items-center justify-center min-h-screen">
+import React, { useState, useEffect, useMemo } from 'react';
 
-    <!-- Main Game Screen -->
-    <div id="main-game-container" class="w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl">
-        <div class="flex-grow space-y-4 flex flex-col">
-            <div class="flex justify-between items-center text-gray-800 px-2">
-                <div id="game-time-display" class="font-semibold">Day 1, 12:00 AM</div>
-                <div id="real-date-display" class="text-sm"></div>
-            </div>
-            <div id="create-account-button-wrapper" class="card-dark text-white rounded-2xl p-4 shadow-lg flex items-center justify-center">
-                 <button id="bank-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors text-base">Bank</button>
-            </div>
-            <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
-                <p class="text-sm text-gray-500">Total Balance</p>
-                <p id="total-balance-display" class="text-3xl font-bold">$10,000.00</p>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
-                    <p class="text-sm font-semibold text-gray-600">Investing</p>
-                    <p id="investing-amount" class="text-xl font-bold my-1">$0.00</p>
-                    <p id="investing-roi" class="text-lg font-bold text-gray-500">0.00%</p>
-                </div>
-                <div class="bg-white text-gray-800 rounded-2xl p-4 shadow-lg text-center">
-                    <p class="text-sm font-semibold text-gray-600">Business</p>
-                    <p id="business-amount" class="text-xl font-bold my-1">$0.00</p>
-                    <p id="business-roi" class="text-lg font-bold text-gray-500">0.00%</p>
-                </div>
-            </div>
-        </div>
-        <nav class="grid grid-cols-5 gap-2 text-center text-gray-600 mt-4">
-            <button id="investing-nav-btn" class="p-2 rounded-lg"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg><span class="text-xs">Investing</span></button>
-            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg><span class="text-xs">Business</span></a>
-            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 18v-2m0-2v-2m0-2V8m0 10c-1.11 0-2.08-.402-2.599-1M12 18v1m0 1v1m0-2.01M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg><span class="text-xs font-bold">Earnings</span></a>
-            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg><span class="text-xs">Items</span></a>
-            <a href="#" class="p-2 rounded-lg hover:bg-gray-200 transition-colors"><svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span class="text-xs">Profile</span></a>
-        </nav>
-    </div>
+// --- Icon Components ---
+const TrendingUp = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+);
+const Building = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" /><path d="M12 10h.01" /><path d="M12 14h.01" /><path d="M16 10h.01" /><path d="M8 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /></svg>
+);
+const PieChart = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21.21 15.89A10 10 0 1 1 8.11 3.99" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>
+);
+const Grid = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+);
+const User = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+);
+const ChevronLeft = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 18-6-6 6-6"/></svg>
+);
+const ChevronRight = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m9 18 6-6-6-6"/></svg>
+);
+const LocationPin = (props) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>;
+
+// --- Logo Components ---
+const AppleLogo = () => <svg className="w-6 h-6 text-gray-800" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5,15.76C16.5,15.76,16.5,15.76,16.5,15.76c-0.28,0.88-0.75,1.7-1.38,2.44c-0.66,0.78-1.48,1.38-2.63,1.38 c-0.96,0-1.88-0.5-2.69-1.34c-0.8-0.84-1.4-2.02-1.4-3.3c0-1.5,0.6-2.69,1.4-3.53c0.77-0.81,1.7-1.28,2.69-1.28 c0.5,0,1.23,0.19,1.88,0.56C15.1,13.43,15.36,13.2,16.5,13.2c1.23,0,2.39-0.85,2.4-0.88c-1.23-1.62-3.13-1.84-3.8-1.88 c-0.83-0.06-1.6,0.38-2.25,0.38c-0.65,0-1.31-0.38-2.19-0.38c-1.44,0-2.69,0.75-3.44,1.94c-0.96,1.5-1.12,3.75,0.31,5.44 c0.72,0.88,1.66,1.44,2.69,1.44c0.88,0,1.63-0.44,2.38-1.25c0.75-0.81,1.25-1.94,1.31-2.06C16.5,15.76,16.5,15.76,16.5,15.76z M15.19,8.56c0.06-0.94-0.5-1.81-1.25-2.31c-0.69-0.44-1.5-0.5-2.12-0.5c-1.38,0-2.69,0.88-3.38,2.19c-0.69,1.31,0,3,1.31,3.62 c0.69,0.31,1.5,0.19,2.19,0.19c0.69,0,1.5-0.25,2.12-0.75C14.88,10.5,15.13,9.5,15.19,8.56z"/></svg>;
+const MicrosoftLogo = () => <div className="grid grid-cols-2 w-6 h-6 gap-px"><div className="bg-[#f25022]"></div><div className="bg-[#7fba00]"></div><div className="bg-[#00a4ef]"></div><div className="bg-[#ffb900]"></div></div>;
+const GoogleLogo = () => <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="h-6" onError={(e) => e.target.style.display='none'}/>;
+const AmazonLogo = () => <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M19.22,14.34a5.18,5.18,0,0,1-3.3,4.41,5.09,5.09,0,0,1-5.46-1.42,1,1,0,0,1,1.41-1.41,3.09,3.09,0,0,0,3.13.82,3.18,3.18,0,0,0,2.1-3.23c0-.13,0-.26,0-.39H12a1,1,0,0,1,0-2h7.45a5.1,5.1,0,0,1,.23,1.22A5.17,5.17,0,0,1,19.22,14.34Z"/><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm6.91,6.26L17.5,9.67a1,1,0,0,1-1.41,0L13.22,6.8a5.2,5.2,0,0,0-6.42,5.5,5.15,5.15,0,0,0,4.2,4.82,1,1,0,0,1,.8-1.83A3.15,3.15,0,0,1,8.92,12a3.2,3.2,0,0,1,3.8-3.11L11.3,10.3a1,1,0,0,1,0,1.41L9.89,13.12a1,1,0,0,1-1.41,0L4.22,8.86A8,8,0,0,1,17.47,4.85,1,1,0,0,1,18.91,6.26Z"/></svg>;
+const NvidiaLogo = () => <svg className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M11.23 15.34a1.76 1.76 0 0 1-1.6 1.13 1.69 1.69 0 0 1-1.74-1.63v-5.4a1.86 1.86 0 0 1 .31-1 1.68 1.68 0 0 1 1.43-.61 1.76 1.76 0 0 1 1.6 1.13v6.4zm-1.6-9.87a1.69 1.69 0 0 0-1.74-1.63 1.86 1.86 0 0 0-.31 1v2.52l2.05-2.89zm6.65 1.54V4a1.68 1.68 0 0 0-1.43-.61 1.76 1.76 0 0 0-1.6 1.13l-6.28 8.81V17a1.86 1.86 0 0 0 .31 1 1.69 1.69 0 0 0 1.74 1.63 1.76 1.76 0 0 0 1.6-1.13l6.28-8.81V6.9a1.86 1.86 0 0 0-.31-1zm-6.28 8.81L7.95 9.42v2.52a1.76 1.76 0 0 0 1.6 1.13 1.68 1.68 0 0 0 1.43-.61l-1.35 1.9zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/></svg>;
+const TeslaLogo = () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.58,4.6L15,4.22l-3,9.59L9,4.22L7.42,4.6L12,20L16.58,4.6M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10,10-4.48,10-10S17.52,2,12,2Z"/></svg>;
+const MetaLogo = () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22.05,12.05C22.05,6.51,17.54,2,12,2S1.95,6.51,1.95,12.05c0,4.41,2.87,8.17,6.84,9.49V13.84H6.48v-3.56h2.3V7.61c0-2.27,1.35-3.52,3.41-3.52c0.97,0,1.94,0.18,1.94,0.18v3.06h-1.57c-1.1,0-1.43,0.69-1.43,1.37v2.64h3.41l-0.53,3.56h-2.88v7.69C19.18,20.22,22.05,16.46,22.05,12.05Z"/></svg>;
+const VisaLogo = () => <svg className="w-8 h-8" fill="none" viewBox="0 0 40 26"><path fill="#142688" fillRule="evenodd" d="M30.41 25.12L35.2 0H40L32.8 25.12h-2.4zm-19.2-25.12L5.6 18.04l-.8-3.92L9.53 0h5.2zm-5.28 25.12H0L7.2.01h5.2L7.13 25.12zM36.8 6.24c.4.4.6.93.6 1.53 0 .6-.2 1.2-.6 1.53l-6.32 6.4v9.42h-5.2V17.2L20.8 8.05c-.8-.8-1.2-1.8-1.2-2.88 0-2.13 1.73-3.85 3.85-3.85h4.72c1.47 0 2.73.8 3.48 2 .75-1.2 2-2 3.47-2h.02z" clipRule="evenodd"/></svg>;
+const NetflixLogo = () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#e50914"><path d="M8.496226,18.8163265 L8.496226,5.03265306 L11.2163265,5.03265306 L11.2163265,18.4326531 C12.8341837,17.5688776 14.0535714,16.5178571 15.0862245,15.1428571 L15.0862245,5.03265306 L17.8061224,5.03265306 L17.8061224,18.9673469 C17.8061224,19.3331633 17.5188776,19.5204082 17.077551,19.5204082 C16.6362245,19.5204082 16.2755102,19.3112245 15.8673469,19.0489796 L11.4591837,13.7959184 C10.9923469,14.6653061 10.377551,15.4260204 9.71173469,16.1867347 L8.6122449,17.7081633 C8.21938776,18.3035714 7.82142857,18.8928571 7.42346939,19.4765306 C7.0255102,19.4642857 6.62755102,19.4520408 6.22959184,19.4397959 C6.25510204,19.2678571 6.28061224,19.0959184 6.30612245,18.9239796 C6.94642857,17.9158163 7.64540816,16.9744898 8.496226,15.4204082 L8.496226,18.8163265 Z"/></svg>;
+const McDonaldsLogo = () => <svg className="w-7 h-7" viewBox="0 0 24 24" fill="#ffc72c"><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm-3.17,15.42A7.54,7.54,0,0,1,5,11.56,7.49,7.49,0,0,1,8.83,4.58,1,1,0,0,1,10,5.75,5.65,5.65,0,0,0,12,6.56,5.65,5.65,0,0,0,14,5.75a1,1,0,0,1,1.17-1.17A7.49,7.49,0,0,1,19,11.56a7.54,7.54,0,0,1-3.83,5.86A1,1,0,0,1,14,16.25a5.45,5.45,0,0,0-4,0A1,1,0,0,1,8.83,17.42Z"/></svg>;
+const BitcoinLogo = () => <svg className="w-6 h-6 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm3.23,12.33a2.79,2.79,0,0,1-1.89.7H12.5v2.5H11.25V15H10.5a.75.75,0,0,1,0-1.5h.75V12.75H10.5a.75.75,0,0,1,0-1.5h.75V10.5H10.5a.75.75,0,0,1,0-1.5h.75V6.5h3.14a2.79,2.79,0,0,1,2.21,1.1,2.06,2.06,0,0,1,.12,2.37A2.08,2.08,0,0,1,15.23,12.33Zm-1.89-3.33H12.5v2.5h.84a1.48,1.48,0,0,0,1.42-1.25A1.49,1.49,0,0,0,13.34,9Z"/></svg>;
+const EthereumLogo = () => <svg className="w-6 h-6 text-gray-800" viewBox="0 0 24 24" fill="currentColor"><path d="M12,1.75l-6.15,10.65,6.15,3.5,6.15-3.5L12,1.75Zm0,18.5,6.15-3.5-6.15,7V16.75Z M12,1.75,5.85,12.4,12,15.9,18.15,12.4,12,1.75Z"/></svg>;
+const GenericLogo = ({ letter, color }) => <div className={`text-xl font-bold ${color || 'text-gray-700'}`}>{letter}</div>;
+
+
+// --- Data ---
+const initialStockData = [
+    { id: 1, name: 'Apple', logo: <AppleLogo />, price: 170.87 }, { id: 2, name: 'Microsoft', logo: <MicrosoftLogo />, price: 334.06 },
+    { id: 3, name: 'Google', logo: <GoogleLogo />, price: 141.41 }, { id: 4, name: 'Amazon', logo: <AmazonLogo />, price: 131.57 },
+    { id: 5, name: 'NVIDIA', logo: <NvidiaLogo />, price: 469.21 }, { id: 6, name: 'Tesla', logo: <TeslaLogo />, price: 265.85 },
+    { id: 7, name: 'Meta Platforms', logo: <MetaLogo />, price: 325.48 }, { id: 8, name: 'Berkshire Hathaway', logo: <GenericLogo letter="B" />, price: 542.90 },
+    { id: 9, name: 'Eli Lilly', logo: <GenericLogo letter="L" />, price: 580.10 }, { id: 10, name: 'Visa', logo: <VisaLogo />, price: 240.75 },
+    { id: 11, name: 'Johnson & Johnson', logo: <GenericLogo letter="J" />, price: 165.30 }, { id: 12, name: 'Walmart', logo: <GenericLogo letter="W" />, price: 160.15 },
+    { id: 13, name: 'JPMorgan Chase', logo: <GenericLogo letter="J" />, price: 150.80 }, { id: 14, name: 'Exxon Mobil', logo: <GenericLogo letter="X" />, price: 110.25 },
+    { id: 15, name: 'UnitedHealth', logo: <GenericLogo letter="U" />, price: 520.60 }, { id: 16, name: 'Mastercard', logo: <GenericLogo letter="M" />, price: 390.90 },
+    { id: 17, name: 'Procter & Gamble', logo: <GenericLogo letter="P" />, price: 155.45 }, { id: 18, name: 'Oracle', logo: <GenericLogo letter="O" />, price: 120.35 },
+    { id: 19, name: 'Home Depot', logo: <GenericLogo letter="H" />, price: 330.20 }, { id: 20, name: 'Chevron', logo: <GenericLogo letter="C" />, price: 165.70 },
+    { id: 21, name: 'Merck & Co.', logo: <GenericLogo letter="M" />, price: 115.90 }, { id: 22, name: 'Adobe', logo: <GenericLogo letter="A" />, price: 550.40 },
+    { id: 23, name: 'Coca-Cola', logo: <GenericLogo letter="C" />, price: 60.25 }, { id: 24, name: 'Bank of America', logo: <GenericLogo letter="B" />, price: 30.10 },
+    { id: 25, name: 'Pepsico', logo: <GenericLogo letter="P" />, price: 180.50 }, { id: 26, name: 'Salesforce', logo: <GenericLogo letter="S" />, price: 225.80 },
+    { id: 27, name: 'Cisco', logo: <GenericLogo letter="C" />, price: 55.40 }, { id: 28, name: 'Intel', logo: <GenericLogo letter="I" />, price: 35.60 },
+    { id: 29, name: 'Netflix', logo: <NetflixLogo />, price: 440.30 }, { id: 30, name: 'AMD', logo: <GenericLogo letter="A" />, price: 110.10 },
+    { id: 31, name: 'Disney', logo: <GenericLogo letter="D" />, price: 85.90 }, { id: 32, name: 'Pfizer', logo: <GenericLogo letter="P" />, price: 36.20 },
+    { id: 33, name: 'AT&T', logo: <GenericLogo letter="T" />, price: 14.80 }, { id: 34, name: 'Verizon', logo: <GenericLogo letter="V" />, price: 34.50 },
+    { id: 35, name: 'Nike', logo: <GenericLogo letter="N" />, price: 105.70 }, { id: 36, name: 'McDonalds', logo: <McDonaldsLogo />, price: 290.40 },
+    { id: 37, name: 'IBM', logo: <GenericLogo letter="I" />, price: 145.20 }, { id: 38, name: 'Starbucks', logo: <GenericLogo letter="S" />, price: 100.80 },
+    { id: 39, name: 'Ford', logo: <GenericLogo letter="F" />, price: 12.50 }, { id: 40, name: 'General Motors', logo: <GenericLogo letter="G" />, price: 38.60 },
+    { id: 41, name: 'Sony', logo: <GenericLogo letter="S" />, price: 95.30 }, { id: 42, name: 'Toyota', logo: <GenericLogo letter="T" />, price: 180.10 },
+    { id: 43, name: 'Samsung', logo: <GenericLogo letter="S" />, price: 60.50 }, { id: 44, name: 'SAP', logo: <GenericLogo letter="S" />, price: 140.70 },
+    { id: 45, name: 'Costco', logo: <GenericLogo letter="C" />, price: 550.90 }, { id: 46, 'name': 'PayPal', 'logo': <GenericLogo letter="P" />, 'price': 63.80 },
+    { id: 47, 'name': 'Intuit', 'logo': <GenericLogo letter="I" />, 'price': 475.60 }, { id: 48, 'name': 'Amgen', 'logo': <GenericLogo letter="A" />, 'price': 230.40 },
+    { id: 49, 'name': 'Qualcomm', 'logo': <GenericLogo letter="Q" />, 'price': 125.10 }, { id: 50, 'name': 'Boeing', 'logo': <GenericLogo letter="B" />, 'price': 215.80 }
+];
+
+const initialCryptoData = [
+    { id: 51, name: 'Bitcoin', symbol: 'BTC', logo: <BitcoinLogo />, price: 29850.55 }, { id: 52, name: 'Ethereum', symbol: 'ETH', logo: <EthereumLogo />, price: 1850.25 },
+    { id: 53, name: 'Tether', symbol: 'USDT', logo: <GenericLogo letter="T" color="text-green-500"/>, price: 1.00 }, { id: 54, name: 'Ripple', symbol: 'XRP', logo: <GenericLogo letter="X" color="text-blue-500"/>, price: 0.71 },
+    { id: 55, name: 'Cardano', symbol: 'ADA', logo: <GenericLogo letter="A" color="text-blue-400"/>, price: 0.30 }, { id: 56, name: 'Dogecoin', symbol: 'DOGE', logo: <GenericLogo letter="D" color="text-yellow-400"/>, price: 0.07 },
+    { id: 57, name: 'Solana', symbol: 'SOL', logo: <GenericLogo letter="S" color="text-purple-500"/>, price: 24.50 }, { id: 58, name: 'Litecoin', symbol: 'LTC', logo: <GenericLogo letter="L" color="text-gray-400"/>, price: 92.80 },
+    { id: 59, name: 'Polkadot', symbol: 'DOT', logo: <GenericLogo letter="P" color="text-pink-500"/>, price: 5.20 }, { id: 60, name: 'Polygon', symbol: 'MATIC', logo: <GenericLogo letter="M" color="text-purple-400"/>, price: 0.75 },
+    { id: 61, name: 'Binance Coin', symbol: 'BNB', logo: <GenericLogo letter="B" color="text-yellow-600"/>, price: 240.10 }, { id: 62, name: 'USD Coin', symbol: 'USDC', logo: <GenericLogo letter="U" color="text-blue-600"/>, price: 1.00 },
+    { id: 63, name: 'Shiba Inu', symbol: 'SHIB', logo: <GenericLogo letter="S" color="text-orange-500"/>, price: 0.000008 }, { id: 64, name: 'TRON', symbol: 'TRX', logo: <GenericLogo letter="T" color="text-red-600"/>, price: 0.08 },
+    { id: 65, name: 'Avalanche', symbol: 'AVAX', logo: <GenericLogo letter="A" color="text-red-500"/>, price: 13.55 }, { id: 66, name: 'Chainlink', symbol: 'LINK', logo: <GenericLogo letter="L" color="text-blue-700"/>, price: 6.45 },
+    { id: 67, name: 'Uniswap', symbol: 'UNI', logo: <GenericLogo letter="U" color="text-pink-600"/>, price: 5.80 }, { id: 68, name: 'Monero', symbol: 'XMR', logo: <GenericLogo letter="M" color="text-orange-600"/>, price: 160.20 },
+    { id: 69, name: 'Ethereum Classic', symbol: 'ETC', logo: <GenericLogo letter="E" color="text-green-600"/>, price: 18.90 }, { id: 70, name: 'Stellar', symbol: 'XLM', logo: <GenericLogo letter="S" color="text-gray-500"/>, price: 0.15 },
+    { id: 71, name: 'Bitcoin Cash', symbol: 'BCH', logo: <GenericLogo letter="B" color="text-green-500"/>, price: 245.50 }, { id: 72, name: 'Cosmos', symbol: 'ATOM', logo: <GenericLogo letter="A" color="text-gray-700"/>, price: 9.30 },
+    { id: 73, name: 'Algorand', symbol: 'ALGO', logo: <GenericLogo letter="A" color="text-teal-500"/>, price: 0.11 }, { id: 74, name: 'VeChain', symbol: 'VET', logo: <GenericLogo letter="V" color="text-blue-300"/>, price: 0.018 },
+    { id: 75, name: 'Filecoin', symbol: 'FIL', logo: <GenericLogo letter="F" color="text-teal-400"/>, price: 4.10 }, { id: 76, name: 'Internet Computer', symbol: 'ICP', logo: <GenericLogo letter="I" color="text-indigo-500"/>, price: 4.25 },
+    { id: 77, name: 'ApeCoin', symbol: 'APE', logo: <GenericLogo letter="A" color="text-blue-500"/>, price: 2.10 }, { id: 78, name: 'Hedera', symbol: 'HBAR', logo: <GenericLogo letter="H" />, price: 0.05 },
+    { id: 79, name: 'EOS', symbol: 'EOS', logo: <GenericLogo letter="E" />, price: 0.75 }, { id: 80, name: 'The Sandbox', symbol: 'SAND', logo: <GenericLogo letter="S" color="text-blue-400"/>, price: 0.42 },
+    { id: 81, name: 'Decentraland', symbol: 'MANA', logo: <GenericLogo letter="M" color="text-orange-400"/>, price: 0.40 }, { id: 82, name: 'Tezos', symbol: 'XTZ', logo: <GenericLogo letter="T" color="text-blue-500"/>, price: 0.85 },
+    { id: 83, name: 'Quant', symbol: 'QNT', logo: <GenericLogo letter="Q" />, price: 105.60 }, { id: 84, name: 'Fantom', symbol: 'FTM', logo: <GenericLogo letter="F" color="text-blue-600"/>, price: 0.25 },
+    { id: 85, name: 'Aave', symbol: 'AAVE', logo: <GenericLogo letter="A" color="text-teal-300"/>, price: 65.70 }, { id: 86, name: 'Theta Network', symbol: 'THETA', logo: <GenericLogo letter="T" color="text-cyan-400"/>, price: 0.78 },
+    { id: 87, name: 'Axie Infinity', symbol: 'AXS', logo: <GenericLogo letter="A" color="text-blue-400"/>, price: 6.15 }, { id: 88, name: 'BitTorrent', symbol: 'BTT', logo: <GenericLogo letter="B" color="text-purple-500"/>, price: 0.00000048 },
+    { id: 89, name: 'Maker', symbol: 'MKR', logo: <GenericLogo letter="M" color="text-teal-500"/>, price: 1120.40 }, { id: 90, name: 'Zcash', symbol: 'ZEC', logo: <GenericLogo letter="Z" color="text-yellow-600"/>, price: 29.80 },
+    { id: 91, name: 'IOTA', symbol: 'MIOTA', logo: <GenericLogo letter="I" />, price: 0.16 }, { id: 92, name: 'Neo', symbol: 'NEO', logo: <GenericLogo letter="N" color="text-green-500"/>, price: 8.90 },
+    { id: 93, name: 'Flow', symbol: 'FLOW', logo: <GenericLogo letter="F" color="text-teal-300"/>, price: 0.55 }, { id: 94, name: 'Chiliz', symbol: 'CHZ', logo: <GenericLogo letter="C" color="text-red-600"/>, price: 0.06 },
+    { id: 95, name: 'Enjin Coin', symbol: 'ENJ', logo: <GenericLogo letter="E" />, price: 0.30 }, { id: 96, name: 'Dash', symbol: 'DASH', logo: <GenericLogo letter="D" color="text-blue-600"/>, price: 29.50 },
+    { id: 97, name: 'Synthetix', symbol: 'SNX', logo: <GenericLogo letter="S" color="text-blue-300"/>, price: 2.25 }, { id: 98, name: 'Basic Attention Token', symbol: 'BAT', logo: <GenericLogo letter="B" color="text-purple-600"/>, price: 0.20 },
+    { id: 99, name: 'Compound', symbol: 'COMP', logo: <GenericLogo letter="C" color="text-green-400"/>, price: 42.10 }, { id: 100, name: 'Gala', symbol: 'GALA', logo: <GenericLogo letter="G" />, price: 0.025 }
+];
+
+const generateRealEstateData = () => {
+    const data = [];
+    const propertyTypes = ["Modern Villa", "Cozy Cottage", "Downtown Apartment", "Luxury Penthouse", "Suburban House", "Beachfront Bungalow", "Mountain Cabin", "Skyscraper Suite", "Historic Mansion", "Riverside Loft"];
+    const locations = ["New York, USA", "London, UK", "Tokyo, Japan", "Sydney, Australia", "Dubai, UAE", "Singapore", "Hong Kong", "Los Angeles, USA", "Chicago, USA", "Toronto, Canada"];
     
-    <!-- Investing Screen -->
-    <div id="investing-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
-        <div class="flex items-center mb-4"><button id="back-to-main-from-invest" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 class="text-xl font-bold text-center flex-grow">Investing</h2></div>
-        <div class="flex border-b">
-            <button class="invest-tab-btn flex-1 py-2 text-center text-blue-600 border-b-2 border-blue-600 font-semibold" data-index="0">Shares</button>
-            <button class="invest-tab-btn flex-1 py-2 text-center text-gray-500" data-index="1">Real Estate</button>
-            <button class="invest-tab-btn flex-1 py-2 text-center text-gray-500" data-index="2">Cryptocurrency</button>
+    data.push({ id: 101, name: 'Eiffel Tower', location: 'Paris, France', price: 9500000, image: 'https://placehold.co/600x400/D1D5DB/374151?text=Eiffel+Tower' });
+    data.push({ id: 102, name: 'Burj Khalifa', location: 'Dubai, UAE', price: 10000000, image: 'https://placehold.co/600x400/D1D5DB/374151?text=Burj+Khalifa' });
+    data.push({ id: 103, name: 'Taj Mahal', location: 'Agra, India', price: 8000000, image: 'https://placehold.co/600x400/D1D5DB/374151?text=Taj+Mahal' });
+    data.push({ id: 104, name: 'The Colosseum', location: 'Rome, Italy', price: 7500000, image: 'https://placehold.co/600x400/D1D5DB/374151?text=The+Colosseum' });
+    data.push({ id: 105, name: 'Statue of Liberty', location: 'New York, USA', price: 9000000, image: 'https://placehold.co/600x400/D1D5DB/374151?text=Statue+of+Liberty' });
+
+    for (let i = 106; i <= 200; i++) {
+        const type = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+        const location = locations[Math.floor(Math.random() * locations.length)];
+        const price = Math.floor(Math.random() * (9990000) + 10000);
+        data.push({ id: i, name: type, location: location, price: price, image: `https://placehold.co/600x400/E5E7EB/4B5563?text=${type.replace(/\s/g,'+')}` });
+    }
+    return data.sort((a,b) => a.price - b.price);
+};
+
+const initialRealEstateData = generateRealEstateData();
+
+// --- Graph Component ---
+const StockGraph = ({ history, dir }) => {
+    if (!history || history.length < 2) { return <div className="h-40 flex items-center justify-center text-gray-400">Not enough data for graph</div>; }
+    const width = 300, height = 100, padding = 5;
+    const maxVal = Math.max(...history), minVal = Math.min(...history);
+    const range = maxVal - minVal === 0 ? 1 : maxVal - minVal;
+    const points = history.map((val, i) => { const x = (i / (history.length - 1)) * (width - padding * 2) + padding; const y = height - ((val - minVal) / range) * (height - padding * 2) - padding; return `${x},${y}`; }).join(' ');
+    const areaPoints = `${points} ${width - padding},${height - padding} ${padding},${height - padding}`;
+    const lineColor = dir === 'up' ? '#22c55e' : '#ef4444';
+    const gradientId = `gradient-${dir}`;
+    return (
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+            <defs><linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style={{ stopColor: lineColor, stopOpacity: 0.3 }} /><stop offset="100%" style={{ stopColor: lineColor, stopOpacity: 0 }} /></linearGradient></defs>
+            <polygon fill={`url(#${gradientId})`} points={areaPoints} />
+            <polyline fill="none" stroke={lineColor} strokeWidth="2" points={points} />
+        </svg>
+    );
+};
+
+// --- Page Components ---
+const MainDashboard = ({ onNavigate, gameStartDate, currentGameTime, balance }) => {
+    const daysPassed = Math.floor((currentGameTime.getTime() - gameStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const timeString = currentGameTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    return (
+        <div className="p-4 text-white bg-slate-900 h-full">
+          <header className="flex justify-between items-center mb-4">
+            <h1 className="text-lg font-semibold">{`Day ${daysPassed}, ${timeString}`}</h1>
+            <p className="text-sm">{currentGameTime.toLocaleDateString('en-US')}</p>
+          </header>
+          <div className="mb-6"> <button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition"> Bank </button> </div>
+          <div className="bg-white text-gray-800 rounded-xl p-6 mb-6 text-center shadow-lg">
+            <p className="text-gray-500 text-sm">Total Balance</p>
+            <p className="text-3xl sm:text-4xl font-bold tracking-tight">${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div className="bg-white text-gray-800 rounded-xl p-4 text-center shadow-lg"><p className="text-lg font-semibold">Investing</p><p className="text-2xl font-bold">$0.00</p><p className="text-green-500 text-sm">+0.00%</p></div>
+            <div className="bg-white text-gray-800 rounded-xl p-4 text-center shadow-lg"><p className="text-lg font-semibold">Business</p><p className="text-2xl font-bold">$0.00</p><p className="text-green-500 text-sm">+0.00%</p></div>
+          </div>
         </div>
-        <div class="flex-grow overflow-hidden"><div id="investment-slider" class="flex h-full w-[300%] transition-transform duration-300 ease-in-out">
-            <div class="w-1/3 p-4 space-y-4">
-                <div id="my-stock-portfolio" class="bg-blue-100 p-4 rounded-lg cursor-pointer"><div class="flex justify-between items-center"><h3 class="font-bold">My stock portfolio</h3><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div><p class="text-xs text-gray-600 mt-2">Value of stock portfolio</p><p id="stock-portfolio-value" class="text-2xl font-bold">$0.00</p><p id="stock-portfolio-roi" class="text-sm text-green-600">+ $0.00 (0.00%) for all time</p><p class="text-xs text-gray-600 mt-2">Estimated yield per hour</p><p id="stock-yield-hour" class="text-lg font-bold">$0.00</p></div>
-                <div id="stock-market" class="bg-blue-500 text-white p-4 rounded-lg cursor-pointer"><div class="flex justify-between items-center"><div><h3 class="font-bold">Stock market</h3><p class="text-sm">View all available offers</p></div><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div></div>
-            </div>
-            <div class="w-1/3 p-4 flex items-center justify-center"><p class="text-gray-500">Real Estate investments coming soon!</p></div>
-            <div class="w-1/3 p-4 flex items-center justify-center"><p class="text-gray-500">Cryptocurrency investments coming soon!</p></div>
-        </div></div>
-    </div>
+    );
+};
+
+// --- Investing Sub-Pages ---
+const SharesView = ({ onNavigate }) => (
+    <><div className="bg-blue-100 text-blue-900 rounded-xl p-4 cursor-pointer hover:bg-blue-200 transition"><div className="flex justify-between items-center"> <h2 className="font-bold">My stock portfolio</h2> <ChevronRight className="h-5 w-5" /> </div><p className="text-xs mt-2">Value of stock portfolio</p><p className="text-2xl font-bold">$0.00</p><p className="text-xs text-green-600">+ $0.00 (0.00%) for all time</p><p className="text-xs mt-2">Estimated yield per hour</p><p className="font-bold">$0.00</p></div><button onClick={() => onNavigate('stockMarket')} className="w-full bg-blue-500 text-white rounded-xl p-4 text-left cursor-pointer hover:bg-blue-600 transition"><div className="flex justify-between items-center"><div><h2 className="font-bold">Stock market</h2><p className="text-sm">View all available offers</p></div><ChevronRight className="h-5 w-5" /></div></button></>
+);
+
+const RealEstateView = ({ onNavigate, ownedProperties, totalValue, hourlyYield }) => (
+    <><div className="bg-green-100 text-green-900 rounded-xl p-4 mb-4"><h2 className="font-bold">My real estate portfolio</h2><p className="text-xs mt-2">Value of real estate portfolio</p><p className="text-2xl font-bold">${totalValue.toLocaleString()}</p><p className="text-xs mt-2">Estimated yield per hour</p><p className="font-bold">${hourlyYield.toFixed(2)}</p></div><div className="space-y-2 mb-4">{ownedProperties.length > 0 ? ownedProperties.map(prop => (<div key={prop.id} onClick={() => onNavigate('ownedPropertyDetail', prop.id)} className="bg-white p-3 rounded-lg shadow cursor-pointer flex justify-between items-center"><div><p className="font-bold">{prop.name}</p><p className="text-sm text-gray-500">Level: {prop.level}</p></div><ChevronRight className="h-5 w-5 text-gray-400" /></div>)) : <p className="text-center text-gray-500">No properties owned.</p> }</div><button onClick={() => onNavigate('realEstateMarket')} className="w-full bg-green-500 text-white rounded-xl p-4 text-center cursor-pointer hover:bg-green-600 transition"><h2 className="font-bold">Buy Real Estate</h2></button></>
+);
+
+const CryptocurrencyView = ({ onNavigate }) => (
+    <><div className="bg-yellow-100 text-yellow-900 rounded-xl p-4"><h2 className="font-bold">My crypto portfolio</h2><p className="text-xs mt-2">Value of crypto portfolio</p><p className="text-2xl font-bold">$0.00</p><p className="text-xs mt-2">Estimated yield per hour</p><p className="font-bold">$0.00</p></div><button onClick={() => onNavigate('cryptoMarket')} className="w-full bg-yellow-500 text-white rounded-xl p-4 text-center cursor-pointer hover:bg-yellow-600 transition"><h2 className="font-bold">Buy Cryptocurrency</h2></button></>
+);
+
+const InvestingPage = ({ onNavigate, ownedProperties, realEstateValue, realEstateYield }) => {
+    const [activeSubTab, setActiveSubTab] = useState('Shares');
+    return (
+        <div className="bg-gray-100 text-gray-800 flex-grow flex flex-col"><header className="bg-white flex items-center p-4 border-b"><button onClick={() => onNavigate('earnings')} className="text-gray-600"><ChevronLeft className="h-6 w-6" /></button><h1 className="text-xl font-bold text-center flex-grow">Investing</h1><div className="w-6"></div></header><nav className="bg-white flex justify-around border-b px-4"><button onClick={() => setActiveSubTab('Shares')} className={`py-2 px-4 font-semibold text-sm ${activeSubTab === 'Shares' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-400'}`}> Shares </button><button onClick={() => setActiveSubTab('Real Estate')} className={`py-2 px-4 font-semibold text-sm ${activeSubTab === 'Real Estate' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-400'}`}> Real Estate </button><button onClick={() => setActiveSubTab('Cryptocurrency')} className={`py-2 px-4 font-semibold text-sm ${activeSubTab === 'Cryptocurrency' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-400'}`}> Cryptocurrency </button></nav><div className="p-4 space-y-4 flex-grow">{activeSubTab === 'Shares' && <SharesView onNavigate={onNavigate} />}{activeSubTab === 'Real Estate' && <RealEstateView onNavigate={onNavigate} ownedProperties={ownedProperties} totalValue={realEstateValue} hourlyYield={realEstateYield} />}{activeSubTab === 'Cryptocurrency' && <CryptocurrencyView onNavigate={onNavigate} />}</div></div>
+    );
+};
+
+const MarketListPage = ({ items, onSelectItem, onNavigateBack, title, type }) => (
+    <div className="bg-white text-gray-800 flex-grow flex flex-col"><header className="bg-white flex items-center p-4 border-b sticky top-0 z-10"><button onClick={onNavigateBack} className="text-gray-600"><ChevronLeft className="h-6 w-6" /></button><h1 className="text-xl font-bold text-center flex-grow">{title}</h1><div className="w-6"></div></header><ul className="divide-y divide-gray-200 flex-grow overflow-y-auto">{items.map(item => (<li key={item.id} onClick={() => onSelectItem(item)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"><div className="flex items-center space-x-3"><div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100">{item.logo}</div><div><p className="font-bold">{item.name}</p><p className="text-sm text-gray-500">{type === 'stock' ? 'Available' : item.symbol}</p></div></div><div className="text-right"><p className="font-bold">${item.price.toFixed(item.price > 1 ? 2 : 8)}</p><p className={`text-sm ${item.dir === 'up' ? 'text-green-500' : 'text-red-500'}`}>{item.dir === 'up' ? '+' : ''}{item.change.toFixed(2)} ({item.changePercent.toFixed(2)}%)</p></div></li>))}</ul></div>
+);
+
+const DetailPage = ({ item, onNavigateBack, type }) => {
+    const [amount, setAmount] = useState(1);
+    if(!item) return null;
+    const totalPrice = (amount * item.price).toFixed(2);
+    return(<div className="bg-gray-100 text-gray-800 flex-grow flex flex-col"><header className="bg-white flex items-center p-4 border-b sticky top-0 z-10"><button onClick={onNavigateBack} className="text-gray-600"><ChevronLeft className="h-6 w-6" /></button><h1 className="text-xl font-bold text-center flex-grow">{item.name}</h1><div className="w-6"></div></header><div className="p-4 flex-grow overflow-y-auto"><div className="text-center mb-4"><div className="w-16 h-16 mx-auto flex items-center justify-center rounded-full bg-gray-200 mb-2">{item.logo}</div><p className="text-3xl font-bold">${item.price.toFixed(item.price > 1 ? 2 : 8)}</p><p className={`text-lg ${item.dir === 'up' ? 'text-green-500' : 'text-red-500'}`}>{item.dir === 'up' ? '▲' : '▼'} {item.change.toFixed(2)} ({item.changePercent.toFixed(2)}%)</p></div><div className="my-4"><StockGraph history={item.history} dir={item.dir} /><p className="text-center text-xs text-gray-500 mt-1">Last 12 in-game hours</p></div><div className="mb-6"><label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">{type === 'stock' ? 'Number of shares:' : 'Amount:'}</label><input type="number" id="amount" min="1" value={amount} onChange={(e) => setAmount(Math.max(1, parseFloat(e.target.value) || 1))} className="w-full p-3 border border-gray-300 rounded-lg text-center text-xl" /></div><div className="text-center mb-6"><p className="text-gray-600">Total price</p><p className="text-2xl font-bold">${totalPrice}</p></div><div className="grid grid-cols-2 gap-4"><button className="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition">Sell</button><button className="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">Buy</button></div></div></div>);
+};
+
+const RealEstateMarketPage = ({ onNavigateBack, properties, onBuy, ownedIds, balance }) => {
+    const [sortOrder, setSortOrder] = useState('cheapFirst');
+    const sortedProperties = useMemo(() => ([...properties].sort((a, b) => sortOrder === 'cheapFirst' ? a.price - b.price : b.price - a.price)), [properties, sortOrder]);
+    const SortButton = ({ title, order }) => (<button onClick={() => setSortOrder(order)} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${sortOrder === order ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}>{title}</button>);
+    return (<div className="bg-gray-50 text-gray-800 flex-grow flex flex-col"><header className="bg-white flex items-center p-4 border-b sticky top-0 z-10 w-full"><button onClick={onNavigateBack} className="text-gray-600"><ChevronLeft className="h-6 w-6" /></button><div className="text-center flex-grow"><h1 className="text-xl font-bold">Real estate market</h1><p className="text-xs text-gray-500">Balance: ${balance.toLocaleString()}</p></div><div className="w-6"></div></header><div className="p-4 flex justify-center gap-2"><SortButton title="Expensive first" order="expensiveFirst" /><SortButton title="Cheap first" order="cheapFirst" /></div><ul className="flex-grow overflow-y-auto px-4 space-y-4 pb-4">{sortedProperties.map(prop => { const isOwned = ownedIds.includes(prop.id); const canAfford = balance >= prop.price; return (<li key={prop.id} className="bg-white rounded-xl shadow-md overflow-hidden"><img src={prop.image} alt={prop.name} className="w-full h-40 object-cover" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/600x400/D1D5DB/374151?text=Image+Not+Found'}} /><div className="p-4 flex justify-between items-center"><div><p className="text-lg font-bold">${prop.price.toLocaleString()}</p><div className="flex items-center text-gray-500"><LocationPin className="h-4 w-4 mr-1"/><p className="text-sm">{prop.name}, {prop.location}</p></div></div><button onClick={() => onBuy(prop)} disabled={isOwned || !canAfford} className={`font-bold py-2 px-6 rounded-lg transition ${isOwned ? 'bg-gray-400 text-white cursor-not-allowed' : canAfford ? 'bg-gray-800 text-white hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>{isOwned ? 'Owned' : 'Buy'}</button></div></li>)})}</ul></div>);
+};
+
+const OwnedPropertyDetailPage = ({ property, onNavigateBack, onUpgrade, balance }) => {
+    if (!property) return null;
+    const getUpgradeCost = () => { if (property.level === 0) return property.purchasePrice * 0.25; if (property.level === 1) return property.currentValue * 0.30; if (property.level === 2) return property.currentValue * 0.30; return 0; };
+    const upgradeCost = getUpgradeCost();
+    const canAfford = balance >= upgradeCost;
+    return (<div className="bg-gray-100 text-gray-800 flex-grow flex flex-col"><header className="bg-white flex items-center p-4 border-b sticky top-0 z-10"><button onClick={onNavigateBack} className="text-gray-600"><ChevronLeft className="h-6 w-6" /></button><h1 className="text-xl font-bold text-center flex-grow">{property.name}</h1><div className="w-6"></div></header><div className="p-4 flex-grow overflow-y-auto text-center"><img src={property.image} alt={property.name} className="w-full h-48 object-cover rounded-lg mb-4" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/600x400/D1D5DB/374151?text=Image+Not+Found'}} /><h2 className="text-2xl font-bold">{property.name}</h2><p className="text-gray-500 mb-4">{property.location}</p><div className="bg-white p-4 rounded-lg shadow-md mb-6"><p className="text-gray-600">Level</p><p className="text-4xl font-bold">{property.level}</p></div>{property.level < 3 ? (<div className="bg-white p-4 rounded-lg shadow-md"><p className="text-gray-600">Next Upgrade (Level {property.level + 1})</p><p className="text-xl font-bold mb-4">Cost: ${upgradeCost.toLocaleString()}</p><button onClick={() => onUpgrade(property.id, upgradeCost)} disabled={!canAfford} className={`w-full font-bold py-3 rounded-lg transition ${canAfford ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Upgrade</button></div>) : (<div className="bg-white p-4 rounded-lg shadow-md"><p className="text-xl font-bold text-green-600">Max Level Reached</p></div>)}</div></div>);
+};
+
+// --- Main App Component ---
+function App() {
+  const [activePage, setActivePage] = useState('earnings');
+  
+  const [balance, setBalance] = useState(100000);
+  const [ownedProperties, setOwnedProperties] = useState([]);
+  const [stocks, setStocks] = useState(initialStockData.map(s => ({...s, history: Array(12).fill(s.price), change: 0, changePercent: 0, dir: 'up'})));
+  const [cryptos, setCryptos] = useState(initialCryptoData.map(c => ({...c, history: Array(12).fill(c.price), change: 0, changePercent: 0, dir: 'up'})));
+  
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  
+  const [gameStartDate] = useState(new Date());
+  const [realGameStartTime] = useState(Date.now());
+  const [currentGameTime, setCurrentGameTime] = useState(gameStartDate);
+
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      const elapsedRealSeconds = (Date.now() - realGameStartTime) / 1000;
+      const elapsedInGameMinutes = elapsedRealSeconds * 24;
+      const newGameTime = new Date(gameStartDate.getTime() + elapsedInGameMinutes * 60 * 1000);
+      setCurrentGameTime(newGameTime);
+    }, 1000);
+
+    const marketInterval = setInterval(() => {
+        const updateItems = (items, initialData) => items.map(item => {
+            const changeFactor = (Math.random() - 0.49) * 0.02;
+            const newPrice = Math.max(0.00000001, item.price * (1 + changeFactor));
+            const oldPrice = initialData.find(i => i.id === item.id)?.price || item.price;
+            const newChange = newPrice - oldPrice;
+            const newChangePercent = oldPrice ? (newChange / oldPrice) * 100 : 0;
+            const newHistory = [...(item.history || Array(12).fill(newPrice)).slice(1), newPrice];
+            return { ...item, price: newPrice, change: newChange, changePercent: newChangePercent, dir: newChange >= 0 ? 'up' : 'down', history: newHistory };
+        });
+        setStocks(current => updateItems(current, initialStockData));
+        setCryptos(current => updateItems(current, initialCryptoData));
+    }, 2500);
     
-    <!-- Other Screens and Modals... -->
-    <div id="bank-list-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
-        <div class="flex items-center mb-4"><button id="back-to-main" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 class="text-xl font-bold text-center flex-grow">Select a Bank</h2></div>
-        <div id="bank-list-container" class="overflow-y-auto space-y-2"></div>
+    // Real Estate Income (1 real minute = 1 game day)
+    const incomeInterval = setInterval(() => {
+        const totalMonthlyIncome = ownedProperties.reduce((sum, prop) => sum + prop.totalMonthlyIncome, 0);
+        const incomePerMinute = totalMonthlyIncome / 30; // 30 days in a month
+        setBalance(prev => prev + incomePerMinute);
+    }, 60 * 1000); // every minute
+
+    return () => { clearInterval(timeInterval); clearInterval(marketInterval); clearInterval(incomeInterval); };
+  }, [gameStartDate, realGameStartTime, ownedProperties]);
+  
+
+  const navigate = (page, id = null) => {
+      setActivePage(page);
+      setSelectedItemId(id);
+  };
+  
+  const selectItem = (item, type) => {
+      setSelectedItemId(item.id);
+      navigate(type === 'stock' ? 'stockDetail' : 'cryptoDetail');
+  };
+
+  const handleBuyProperty = (property) => {
+    if (balance >= property.price) {
+        setBalance(prev => prev - property.price);
+        const newProperty = { ...property, purchasePrice: property.price, currentValue: property.price, level: 0, totalMonthlyIncome: property.price * 0.05 };
+        setOwnedProperties(prev => [...prev, newProperty]);
+    } else {
+        alert("Not enough balance!");
+    }
+  };
+
+  const handleUpgradeProperty = (propertyId, upgradeCost) => {
+    const propertyToUpgrade = ownedProperties.find(p => p.id === propertyId);
+    if (propertyToUpgrade && balance >= upgradeCost && propertyToUpgrade.level < 3) {
+        setBalance(prev => prev - upgradeCost);
+        setOwnedProperties(prev => prev.map(p => {
+            if (p.id === propertyId) {
+                return { ...p, level: p.level + 1, currentValue: p.currentValue + upgradeCost, totalMonthlyIncome: p.totalMonthlyIncome + (upgradeCost * 0.10) };
+            }
+            return p;
+        }));
+    }
+  };
+  
+  const selectedItem = stocks.find(s => s.id === selectedItemId) || cryptos.find(c => c.id === selectedItemId) || ownedProperties.find(p => p.id === selectedItemId);
+  
+  const realEstateValue = ownedProperties.reduce((sum, prop) => sum + prop.currentValue, 0);
+  const realEstateMonthlyYield = ownedProperties.reduce((sum, prop) => sum + prop.totalMonthlyIncome, 0);
+  const realEstateHourlyYield = realEstateMonthlyYield / (30 * 24);
+
+  const renderContent = () => {
+      switch (activePage) {
+          case 'investing': return <InvestingPage onNavigate={navigate} ownedProperties={ownedProperties} realEstateValue={realEstateValue} realEstateYield={realEstateHourlyYield} />;
+          case 'stockMarket': return <MarketListPage items={stocks} onSelectItem={(item) => selectItem(item, 'stock')} onNavigateBack={() => navigate('investing')} title="Stock Market" type="stock" />;
+          case 'stockDetail': return <DetailPage item={selectedItem} onNavigateBack={() => navigate('stockMarket')} type="stock" />;
+          case 'cryptoMarket': return <MarketListPage items={cryptos} onSelectItem={(item) => selectItem(item, 'crypto')} onNavigateBack={() => navigate('investing')} title="Cryptocurrency Market" type="crypto" />;
+          case 'cryptoDetail': return <DetailPage item={selectedItem} onNavigateBack={() => navigate('cryptoMarket')} type="crypto" />;
+          case 'realEstateMarket': return <RealEstateMarketPage onNavigateBack={() => navigate('investing')} properties={initialRealEstateData} onBuy={handleBuyProperty} ownedIds={ownedProperties.map(p => p.id)} balance={balance} />;
+          case 'ownedPropertyDetail': return <OwnedPropertyDetailPage property={selectedItem} onNavigateBack={() => navigate('investing')} onUpgrade={handleUpgradeProperty} balance={balance} />;
+          default: 
+            return <MainDashboard onNavigate={navigate} gameStartDate={gameStartDate} currentGameTime={currentGameTime} balance={balance}/>;
+      }
+  };
+  
+  const NavItem = ({ page, icon: Icon, label }) => {
+    const isInvestingRelated = page === 'investing' && ['investing', 'stockMarket', 'stockDetail', 'cryptoMarket', 'cryptoDetail', 'realEstateMarket', 'ownedPropertyDetail'].includes(activePage);
+    const isActive = activePage === page || isInvestingRelated;
+    return (<button onClick={() => navigate(page)} className={`flex flex-col items-center justify-center text-center p-3 w-full transition-colors duration-200 ${isActive ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600'}`}><Icon className="h-6 w-6 mb-1" /><span className="text-xs">{label}</span></button>);
+  }
+
+  return (
+    <div className="bg-gray-800 font-sans leading-normal tracking-normal flex justify-center">
+      <div className="w-full max-w-md bg-white flex flex-col min-h-screen">
+        <main className="flex-grow flex flex-col">{renderContent()}</main>
+        <footer className="bg-white sticky bottom-0 w-full border-t border-gray-200 z-20"><nav className="flex justify-around items-center"><NavItem page="investing" icon={TrendingUp} label="Investing" /><NavItem page="business" icon={Building} label="Business" /><NavItem page="earnings" icon={PieChart} label="Earnings" /><NavItem page="items" icon={Grid} label="Items" /><NavItem page="profile" icon={User} label="Profile" /></nav></footer>
+      </div>
     </div>
-    <div id="bank-details-screen" class="hidden w-full max-w-md mx-auto bg-[#f0f4f8] shadow-2xl p-4 flex flex-col h-screen sm:h-auto sm:max-h-[95vh] sm:rounded-3xl text-gray-800">
-        <div class="flex items-center mb-4"><button id="back-to-list" class="p-2 rounded-full hover:bg-gray-200 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button><h2 id="bank-details-name" class="text-xl font-bold text-center flex-grow">Bank Details</h2></div>
-        <div id="bank-details-content" class="flex-grow flex flex-col items-center space-y-4 overflow-y-auto w-full"></div>
-    </div>
-    <div id="letter-modal" class="hidden modal-overlay p-4">
-        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="letter-bank-name" class="text-xl font-bold text-center">Welcome!</h3><p id="letter-text" class="text-sm text-gray-600 leading-relaxed"></p><div class="flex justify-end space-x-3"><button id="letter-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="letter-agree" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Agree & Pay $1,000</button></div></div>
-    </div>
-    <div id="loan-letter-modal" class="hidden modal-overlay p-4">
-        <div class="bg-gray-800 text-white rounded-lg shadow-2xl p-6 max-w-sm w-full space-y-4 overflow-y-auto" style="max-height: 90vh;"><div id="loan-summary-content"></div><div class="flex justify-end space-x-3 pt-2"><button id="loan-letter-cancel" class="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button><button id="loan-letter-agree" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Agree & Take Loan</button></div></div>
-    </div>
-    <div id="card-letter-modal" class="hidden modal-overlay p-4">
-        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="card-letter-title" class="text-xl font-bold text-center">Card Application</h3><p id="card-letter-text" class="text-sm text-gray-600 leading-relaxed"></p><input type="text" id="card-holder-name-input" placeholder="Your Name on Card" class="w-full p-2 border rounded-md"><div class="flex justify-end space-x-3"><button id="card-letter-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="card-letter-agree" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"></button></div></div>
-    </div>
-    <div id="fix-deposit-modal" class="hidden modal-overlay p-4">
-        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full text-gray-800 space-y-4"><h3 id="fd-title" class="text-xl font-bold text-center">Fix Deposit</h3><p id="fd-info" class="text-sm text-gray-500 text-center"></p><input type="number" id="fd-amount-input" placeholder="Amount" class="w-full p-2 border rounded-md"><div class="flex justify-end space-x-3"><button id="fd-cancel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button><button id="fd-ok" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">OK</button></div></div>
-    </div>
-    <div id="notification-popup" class="hidden fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-500 text-white p-4 rounded-lg shadow-xl text-center"></div>
+  );
+}
 
-    <script>
-        // All JavaScript code remains the same as the previous correct version.
-        // No changes needed in the script for this layout adjustment.
-        // --- DOM Elements ---
-        const mainGameContainer = document.getElementById('main-game-container');
-        const investingScreen = document.getElementById('investing-screen');
-        const bankListScreen = document.getElementById('bank-list-screen');
-        const bankDetailsScreen = document.getElementById('bank-details-screen');
-        const letterModal = document.getElementById('letter-modal');
-        const loanLetterModal = document.getElementById('loan-letter-modal');
-        const cardLetterModal = document.getElementById('card-letter-modal');
-        const fixDepositModal = document.getElementById('fix-deposit-modal');
-        const notificationPopup = document.getElementById('notification-popup');
-        const bankButton = document.getElementById('bank-button');
-        const totalBalanceDisplay = document.getElementById('total-balance-display');
-        const investingAmountDisplay = document.getElementById('investing-amount');
-        const investingRoiDisplay = document.getElementById('investing-roi');
-        const businessAmountDisplay = document.getElementById('business-amount');
-        const businessRoiDisplay = document.getElementById('business-roi');
-        const backToMainButton = document.getElementById('back-to-main');
-        const bankListContainer = document.getElementById('bank-list-container');
-        const backToListButton = document.getElementById('back-to-list');
-        const bankDetailsName = document.getElementById('bank-details-name');
-        const bankDetailsContent = document.getElementById('bank-details-content');
-        const letterBankName = document.getElementById('letter-bank-name');
-        const letterText = document.getElementById('letter-text');
-        const letterCancelButton = document.getElementById('letter-cancel');
-        const letterAgreeButton = document.getElementById('letter-agree');
-        const loanSummaryContent = document.getElementById('loan-summary-content');
-        const loanLetterCancelButton = document.getElementById('loan-letter-cancel');
-        const loanLetterAgreeButton = document.getElementById('loan-letter-agree');
-        const cardLetterTitle = document.getElementById('card-letter-title');
-        const cardLetterText = document.getElementById('card-letter-text');
-        const cardHolderNameInput = document.getElementById('card-holder-name-input');
-        const cardLetterCancelButton = document.getElementById('card-letter-cancel');
-        const cardLetterAgreeButton = document.getElementById('card-letter-agree');
-        const gameTimeDisplay = document.getElementById('game-time-display');
-        const realDateDisplay = document.getElementById('real-date-display');
-        const fdTitle = document.getElementById('fd-title');
-        const fdInfo = document.getElementById('fd-info');
-        const fdAmountInput = document.getElementById('fd-amount-input');
-        const fdCancel = document.getElementById('fd-cancel');
-        const fdOk = document.getElementById('fd-ok');
-        const investingNavBtn = document.getElementById('investing-nav-btn');
-        const backToMainFromInvest = document.getElementById('back-to-main-from-invest');
-        const investmentSlider = document.getElementById('investment-slider');
-        const investTabBtns = document.querySelectorAll('.invest-tab-btn');
-        const stockPortfolioValue = document.getElementById('stock-portfolio-value');
-        const stockPortfolioRoi = document.getElementById('stock-portfolio-roi');
-        const stockYieldHour = document.getElementById('stock-yield-hour');
-        const myStockPortfolioBtn = document.getElementById('my-stock-portfolio');
-        const stockMarketBtn = document.getElementById('stock-market');
-
-        // --- Game State ---
-        let gameState = {
-            cash: 10000,
-            investingAmount: 0,
-            initialInvestment: 0,
-            businessAmount: 0,
-            openedAccounts: {}, 
-            gameDaysElapsed: 0,
-            get totalBalance() { return this.cash + this.investingAmount + this.businessAmount; },
-            investingCumulativeRoi: 0,
-            businessCumulativeRoi: 0
-        };
-
-        // --- Data ---
-        const famousBanksOfBangladesh = ["Sonali Bank", "Janata Bank", "Agrani Bank", "Rupali Bank", "BASIC Bank", "Bangladesh Krishi Bank", "Dutch-Bangla Bank", "BRAC Bank", "The City Bank", "Eastern Bank", "Islami Bank Bangladesh", "Prime Bank", "Mutual Trust Bank", "National Bank", "Pubali Bank", "Southeast Bank", "Standard Chartered Bangladesh", "HSBC Bangladesh", "Bank Asia", "United Commercial Bank"];
-        const visaDebitCardTiers = [
-            { name: "Classic Visa Debit Card", type: 'debit', minBalance: 0, maxBalance: 100000, fee: 500, designClass: 'card-classic' },
-            { name: "Gold Visa Debit Card", type: 'debit', minBalance: 100001, maxBalance: 500000, fee: 1000, designClass: 'card-gold' },
-            { name: "Platinum Visa Debit Card", type: 'debit', minBalance: 500001, maxBalance: 1000000, fee: 2000, designClass: 'card-platinum' },
-            { name: "Signature Visa Debit Card", type: 'debit', minBalance: 1000001, maxBalance: 10000000, fee: 5000, designClass: 'card-signature' },
-            { name: "Infinite Visa Debit Card", type: 'debit', minBalance: 10000001, maxBalance: Infinity, fee: 20000, designClass: 'card-infinite' }
-        ];
-        const masterDebitCardTiers = [
-            { name: "Standard Master Debit Card", type: 'debit', minBalance: 0, maxBalance: 100000, fee: 500, designClass: 'card-standard' },
-            { name: "Gold Master Debit Card", type: 'debit', minBalance: 100001, maxBalance: 500000, fee: 1000, designClass: 'card-mc-gold' },
-            { name: "Platinum Master Debit Card", type: 'debit', minBalance: 500001, maxBalance: 1000000, fee: 2000, designClass: 'card-mc-platinum' },
-            { name: "World Master Debit Card", type: 'debit', minBalance: 1000001, maxBalance: 10000000, fee: 5000, designClass: 'card-world' },
-            { name: "World Elite Master Debit Card", type: 'debit', minBalance: 10000001, maxBalance: Infinity, fee: 20000, designClass: 'card-world-elite' }
-        ];
-        const visaCreditCardTiers = visaDebitCardTiers.map(tier => ({...tier, name: tier.name.replace('Debit', 'Credit'), type: 'credit'}));
-        const masterCreditCardTiers = masterDebitCardTiers.map(tier => ({...tier, name: tier.name.replace('Debit', 'Credit'), type: 'credit'}));
-        const fdTiers = [
-            { tenure: "3 Month", months: 3, days: 90, min: 1000, max: 100000, rate: 5.5 },
-            { tenure: "6 Month", months: 6, days: 180, min: 10000, max: 300000, rate: 6.0 },
-            { tenure: "1 Year", months: 12, days: 365, min: 100000, max: 500000, rate: 7.0 },
-            { tenure: "3 Year", months: 36, days: 1095, min: 300000, max: 1000000, rate: 8.0 },
-            { tenure: "5 Year", months: 60, days: 1825, min: 500000, max: 1000000, rate: 9.0 },
-            { tenure: "10 Year", months: 120, days: 3650, min: 500000, max: 10000000, rate: 10.0 }
-        ];
-
-        
-        // --- Utility Functions ---
-        function formatCurrency(num) { return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-        
-        function showNotification(message, duration = 2000, isSuccess = true) {
-            notificationPopup.textContent = message;
-            notificationPopup.className = `fixed top-20 left-1/2 -translate-x-1/2 text-white p-4 rounded-lg shadow-xl text-center z-50 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-            notificationPopup.classList.remove('hidden');
-            setTimeout(() => { notificationPopup.classList.add('hidden'); }, duration);
-        }
-        
-        // --- Time System ---
-        function updateGameTime() {
-            const now = new Date();
-            realDateDisplay.textContent = now.toLocaleDateString();
-            let gameStartDate = localStorage.getItem('gameStartDate');
-            if (!gameStartDate) {
-                gameStartDate = now.getTime();
-                localStorage.setItem('gameStartDate', gameStartDate);
-            }
-            const realTimeElapsedMs = now.getTime() - parseInt(gameStartDate, 10);
-            const msInOneGameDay = 5 * 60 * 1000;
-            gameState.gameDaysElapsed = Math.floor(realTimeElapsedMs / msInOneGameDay);
-            const msIntoCurrentGameDay = realTimeElapsedMs % msInOneGameDay;
-            const gameHours = Math.floor((msIntoCurrentGameDay / msInOneGameDay) * 24);
-            const gameMinutes = Math.floor(((msIntoCurrentGameDay / msInOneGameDay) * 24 * 60) % 60);
-            const ampm = gameHours >= 12 ? 'PM' : 'AM';
-            let displayHours = gameHours % 12;
-            if (displayHours === 0) displayHours = 12;
-            gameTimeDisplay.textContent = `Day ${gameState.gameDaysElapsed + 1}, ${String(displayHours).padStart(2, '0')}:${String(gameMinutes).padStart(2, '0')} ${ampm}`;
-        }
-
-        // --- UI Update & Navigation ---
-        function updateAllUI() {
-            totalBalanceDisplay.textContent = formatCurrency(gameState.totalBalance);
-            investingAmountDisplay.textContent = formatCurrency(gameState.investingAmount);
-            businessAmountDisplay.textContent = formatCurrency(gameState.businessAmount);
-            const updateRoiDisplay = (element, roi) => {
-                const roiText = (roi >= 0 ? '+' : '') + roi.toFixed(2) + '%';
-                element.textContent = roiText;
-                element.style.color = roi > 0 ? '#22c55e' : roi < 0 ? '#ef4444' : '#6b7280';
-            };
-            updateRoiDisplay(investingRoiDisplay, gameState.investingCumulativeRoi);
-            updateRoiDisplay(businessRoiDisplay, gameState.businessCumulativeRoi);
-            
-            stockPortfolioValue.textContent = formatCurrency(gameState.investingAmount);
-            const profitLoss = gameState.investingAmount - gameState.initialInvestment;
-            const profitLossPercent = gameState.initialInvestment > 0 ? (profitLoss / gameState.initialInvestment) * 100 : 0;
-            const roiColor = profitLoss >= 0 ? 'text-green-600' : 'text-red-600';
-            stockPortfolioRoi.className = `text-sm ${roiColor}`;
-            stockPortfolioRoi.textContent = `${profitLoss >= 0 ? '+' : ''} ${formatCurrency(profitLoss)} (${profitLossPercent.toFixed(2)}%) for all time`;
-            stockYieldHour.textContent = formatCurrency(gameState.investingAmount * 0.0001);
-        }
-
-        function showScreen(screenId) {
-            ['main-game-container', 'investing-screen', 'bank-list-screen', 'bank-details-screen'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-        }
-        
-        function showBankList() {
-            backToListButton.onclick = showBankList;
-            bankListContainer.innerHTML = '';
-            famousBanksOfBangladesh.forEach(bankName => {
-                const bankButton = document.createElement('button');
-                bankButton.className = 'w-full text-left p-3 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors';
-                bankButton.textContent = bankName;
-                if (gameState.openedAccounts[bankName]) {
-                    bankButton.classList.add('font-bold', 'text-green-600');
-                }
-                bankButton.addEventListener('click', () => showBankDetails(bankName));
-                bankListContainer.appendChild(bankButton);
-            });
-            showScreen('bank-list-screen');
-        }
-
-        function showBankDetails(bankName) {
-            bankDetailsName.textContent = bankName;
-            bankDetailsContent.innerHTML = '';
-            backToListButton.onclick = showBankList;
-
-            if (gameState.openedAccounts[bankName]) {
-                const account = gameState.openedAccounts[bankName];
-                const annualFee = (account.balance || 0) * 0.01 + 700;
-                
-                let cardHTML = '';
-                if(account.cards && account.cards.length > 0) {
-                     account.cards.forEach(card => {
-                        cardHTML += createVirtualCardElement(card);
-                        if(card.type === 'credit') {
-                            cardHTML += createCreditCardStatementHTML(card);
-                        }
-                    });
-                }
-                
-                let fdHTML = '';
-                if(account.fixDeposits && account.fixDeposits.length > 0) {
-                    fdHTML += '<div class="mt-4 w-full text-left text-sm text-gray-800 bg-gray-100 p-3 rounded-lg"><h4 class="font-bold mb-2">Fix Deposits</h4>';
-                    account.fixDeposits.forEach((fd, index) => {
-                        fdHTML += createFixDepositStatementHTML(fd, bankName, index);
-                    });
-                    fdHTML += '</div>';
-                }
-
-                bankDetailsContent.innerHTML = `
-                    <div class="text-center w-full space-y-3">
-                        <div><p class="text-sm text-gray-500">Bank Balance</p><p class="text-4xl font-bold">${formatCurrency(account.balance)}</p></div>
-                        <button id="fd-button" class="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Fix-deposit</button>
-                        <button id="card-details-button" class="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Card</button>
-                        <button id="loan-details-button" class="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Loan</button>
-                        <div class="pt-4"><p class="text-sm text-gray-500">Annual Fee</p><p class="text-lg font-semibold">${formatCurrency(annualFee)}</p></div>
-                        <div class="w-full">${cardHTML}${fdHTML}</div>
-                    </div>`;
-                document.getElementById('fd-button').addEventListener('click', () => handleFixDepositClick(bankName));
-                document.getElementById('card-details-button').addEventListener('click', () => handleCardButtonClick(bankName));
-                document.getElementById('loan-details-button').addEventListener('click', () => showLoanOptions(bankName));
-
-            } else {
-                const openAccountBtn = document.createElement('button');
-                openAccountBtn.id = 'open-account-btn-details';
-                openAccountBtn.className = 'px-8 py-4 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 text-xl';
-                openAccountBtn.textContent = 'Account Open';
-                openAccountBtn.addEventListener('click', () => showLetter(bankName));
-                bankDetailsContent.appendChild(openAccountBtn);
-            }
-            showScreen('bank-details-screen');
-        }
-
-        function showLetter(bankName) {
-            letterBankName.textContent = `Welcome to ${bankName}`;
-            letterText.innerHTML = `We are delighted to welcome you as a valued customer of <strong>${bankName}</strong>. Please note that an account opening fee of <strong>$1,000</strong> has been charged.`;
-            letterAgreeButton.onclick = () => openAccount(bankName);
-            letterModal.classList.remove('hidden');
-        }
-
-        // --- Card Logic ---
-        function handleCardButtonClick(bankName) { showCardOptions(bankName); }
-        function showCardOptions(bankName) {
-            bankDetailsName.textContent = 'Select Card Type';
-            backToListButton.onclick = () => showBankDetails(bankName);
-            bankDetailsContent.innerHTML = `<div class="w-full space-y-3"></div>`;
-            const container = bankDetailsContent.querySelector('div');
-            const cardTypes = [
-                {name: 'Visa Debit Card', action: () => showCardTiers(bankName, visaDebitCardTiers)},
-                {name: 'Master Debit card', action: () => showCardTiers(bankName, masterDebitCardTiers)},
-                {name: 'Visa Credit card', action: () => showCardTiers(bankName, visaCreditCardTiers)},
-                {name: 'Master Credit card', action: () => showCardTiers(bankName, masterCreditCardTiers)}
-            ];
-            cardTypes.forEach((type) => {
-                const button = document.createElement('button');
-                button.className = 'w-full p-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600';
-                button.textContent = type.name;
-                button.addEventListener('click', type.action);
-                container.appendChild(button);
-            });
-        }
-        function showCardTiers(bankName, cardTiers) {
-             bankDetailsName.textContent = 'Select Card';
-             backToListButton.onclick = () => showCardOptions(bankName);
-             bankDetailsContent.innerHTML = `<div class="w-full space-y-3"></div>`;
-             const container = bankDetailsContent.querySelector('div');
-             const currentBalance = gameState.totalBalance;
-             cardTiers.forEach(cardTier => {
-                const button = document.createElement('button');
-                button.className = 'w-full p-3 bg-sky-500 text-white rounded-lg';
-                button.textContent = `${cardTier.name} (Fee: ${formatCurrency(cardTier.fee)})`;
-                const isEligible = currentBalance >= cardTier.minBalance && currentBalance <= cardTier.maxBalance;
-                if(isEligible) {
-                    button.classList.add('hover:bg-sky-600');
-                    button.addEventListener('click', () => showCardApplicationLetter(cardTier, bankName));
-                } else {
-                    button.classList.add('opacity-50', 'cursor-not-allowed');
-                    button.title = `Requires a balance between ${formatCurrency(cardTier.minBalance)} and ${formatCurrency(cardTier.maxBalance)}`;
-                }
-                container.appendChild(button);
-             });
-        }
-        function showCardApplicationLetter(cardTier, bankName) {
-            cardLetterTitle.textContent = `Apply for ${cardTier.name}`;
-            cardLetterText.textContent = `Welcome to a world of convenience with your new ${cardTier.name}! Enjoy secure shopping, easy ATM access, and seamless online payments. Card valid 10 Years and Card Yearly fee ${formatCurrency(cardTier.fee)}.`;
-            cardHolderNameInput.value = '';
-            cardLetterAgreeButton.textContent = `Agree & Get Card (${formatCurrency(cardTier.fee)} Fee)`;
-            cardLetterAgreeButton.onclick = () => applyForCard(cardTier, bankName);
-            cardLetterModal.classList.remove('hidden');
-        }
-        function applyForCard(cardTier, bankName) {
-            const holderName = cardHolderNameInput.value.trim();
-            if (!holderName) { return showNotification("Please enter a name for the card.", 2000, false); }
-            if (gameState.cash < cardTier.fee) { return showNotification("Insufficient cash for card fee.", 2000, false); }
-            if (gameState.openedAccounts[bankName].cards && gameState.openedAccounts[bankName].cards.some(c => c.cardName === cardTier.name)) {
-                return showNotification(`You already have a ${cardTier.name}.`, 2000, false);
-            }
-            gameState.cash -= cardTier.fee;
-            const newCard = {
-                cardName: cardTier.name,
-                holderName: holderName,
-                designClass: cardTier.designClass,
-                type: cardTier.type,
-                number: (cardTier.name.includes('Visa') ? '4' : '5') + Array.from({length: 15}, () => Math.floor(Math.random() * 10)).join(''),
-                expiry: `${String(new Date().getMonth() + 1).padStart(2, '0')}/${String(new Date().getFullYear() + 10).slice(-2)}`,
-                cvc: String(Math.floor(100 + Math.random() * 900))
-            };
-            if (newCard.type === 'credit') {
-                newCard.transactions = [];
-                newCard.outstandingBalance = 0;
-            }
-            if (!gameState.openedAccounts[bankName].cards) gameState.openedAccounts[bankName].cards = [];
-            gameState.openedAccounts[bankName].cards.push(newCard);
-            cardLetterModal.classList.add('hidden');
-            showNotification('Congratulations! Your new card has been issued.', 3000, true);
-            showBankDetails(bankName);
-            updateAllUI();
-        }
-        function createVirtualCardElement(cardData) {
-            const shortName = cardData.cardName.replace(' Debit Card', '').replace(' Credit Card', '');
-            return `<div class="virtual-card w-full space-y-3 mt-4 ${cardData.designClass}"><div class="flex justify-between items-start"><p class="font-bold text-lg">${shortName}</p><div class="chip"></div></div><p class="card-number text-xl tracking-widest">${cardData.number.replace(/(\d{4})/g, '$1 ').trim()}</p><div class="flex justify-between text-sm"><div><p class="text-xs">Card Holder</p><p>${cardData.holderName.toUpperCase()}</p></div><div><p class="text-xs">Expires</p><p>${cardData.expiry}</p></div><div><p class="text-xs">CVC</p><p>${cardData.cvc}</p></div></div></div>`;
-        }
-        function createCreditCardStatementHTML(card) {
-            let statementHTML = `<div class="mt-4 w-full text-left text-sm text-gray-800 bg-gray-100 p-3 rounded-lg"><h4 class="font-bold mb-2">Credit Card Statement</h4>`;
-            if (!card.transactions || card.transactions.length === 0) {
-                statementHTML += '<p class="text-gray-500">No transactions yet.</p>';
-            } else {
-                statementHTML += `<table class="w-full"><thead><tr class="border-b"><th class="text-left py-1">Date</th><th class="text-left py-1">Description</th><th class="text-right py-1">Amount</th></tr></thead><tbody>`;
-                card.transactions.forEach(tx => {
-                    statementHTML += `<tr><td class="py-1">${new Date(tx.date).toLocaleDateString()}</td><td class="py-1">${tx.item}</td><td class="text-right py-1">${formatCurrency(tx.amount)}</td></tr>`;
-                });
-                statementHTML += `</tbody></table>`;
-            }
-            const interestRate = 0.18;
-            const interestFee = card.outstandingBalance * interestRate;
-            const paymentDueDate = new Date();
-            paymentDueDate.setDate(paymentDueDate.getDate() + 20);
-            statementHTML += `<div class="mt-4 border-t pt-2 space-y-1"><p><strong>Total Outstanding:</strong> ${formatCurrency(card.outstandingBalance)}</p><p><strong>Potential Interest Fee:</strong> ${formatCurrency(interestFee)}</p><p><strong>Payment Due:</strong> ${paymentDueDate.toLocaleDateString()}</p></div></div>`;
-            return statementHTML;
-        }
-        
-        // --- Fix Deposit Logic ---
-        function handleFixDepositClick(bankName) {
-            bankDetailsName.textContent = 'Fix Deposit';
-            backToListButton.onclick = () => showBankDetails(bankName);
-            bankDetailsContent.innerHTML = `<button class="px-8 py-4 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 text-xl" id="open-fd-btn">Open Fix-deposit</button>`;
-            document.getElementById('open-fd-btn').addEventListener('click', () => showFixDepositTiers(bankName));
-        }
-        function showFixDepositTiers(bankName) {
-            bankDetailsName.textContent = 'Select FD Tenure';
-            backToListButton.onclick = () => handleFixDepositClick(bankName);
-            bankDetailsContent.innerHTML = '<div class="w-full space-y-3"></div>';
-            const container = bankDetailsContent.querySelector('div');
-            fdTiers.forEach(tier => {
-                const button = document.createElement('button');
-                button.className = 'w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600';
-                button.textContent = `${tier.tenure} at ${tier.rate}%`;
-                button.addEventListener('click', () => showFixDepositAmountInput(tier, bankName));
-                container.appendChild(button);
-            });
-        }
-        function showFixDepositAmountInput(tier, bankName) {
-            fdTitle.textContent = `Deposit for ${tier.tenure}`;
-            fdInfo.textContent = `Interest: ${tier.rate}%. Amount: ${formatCurrency(tier.min)} to ${formatCurrency(tier.max)}.`;
-            fdAmountInput.value = '';
-            fdAmountInput.min = tier.min;
-            fdAmountInput.max = tier.max;
-            fdOk.onclick = () => createFixDeposit(tier, bankName);
-            fixDepositModal.classList.remove('hidden');
-        }
-        function createFixDeposit(tier, bankName) {
-            const amount = parseFloat(fdAmountInput.value);
-            if (isNaN(amount) || amount < tier.min || amount > tier.max) {
-                return showNotification(`Please enter an amount between ${formatCurrency(tier.min)} and ${formatCurrency(tier.max)}.`, 2500, false);
-            }
-            if (gameState.cash < amount) {
-                return showNotification('Insufficient cash for this deposit.', 2000, false);
-            }
-            gameState.cash -= amount;
-            const newFd = {
-                amount: amount,
-                rate: tier.rate,
-                tenure: tier.tenure,
-                creationDay: gameState.gameDaysElapsed,
-                maturityDay: gameState.gameDaysElapsed + tier.days,
-                claimed: false
-            };
-            if (!gameState.openedAccounts[bankName].fixDeposits) {
-                gameState.openedAccounts[bankName].fixDeposits = [];
-            }
-            gameState.openedAccounts[bankName].fixDeposits.push(newFd);
-            fixDepositModal.classList.add('hidden');
-            showNotification('Fix Deposit created successfully!', 2000, true);
-            showBankDetails(bankName);
-            updateAllUI();
-        }
-        function createFixDepositStatementHTML(fd, bankName, index) {
-             const totalProfit = fd.amount * (fd.rate / 100) * (fdTiers.find(t => t.tenure === fd.tenure).months / 12);
-             const isMatured = gameState.gameDaysElapsed >= fd.maturityDay;
-             const daysRemaining = fd.maturityDay - gameState.gameDaysElapsed;
-             let maturityInfoHTML = '';
-             let claimButtonHTML = '';
-
-             if (isMatured) {
-                 maturityInfoHTML = `<p class="font-semibold text-green-600">Maturity Date: Day ${fd.maturityDay} (Matured!)</p>`;
-                 claimButtonHTML = `<button class="mt-2 w-full p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 claim-fd-btn" data-index="${index}" data-bank="${bankName}">Claim</button>`;
-             } else {
-                 maturityInfoHTML = `<p><strong>Maturity:</strong> Day ${fd.maturityDay} (${daysRemaining} days remaining)</p>`;
-             }
-             return `<div class="border-t pt-2 mt-2"><p><strong>Amount:</strong> ${formatCurrency(fd.amount)}</p><p><strong>Tenure:</strong> ${fd.tenure} at ${fd.rate}%</p><p><strong>Total Profit:</strong> ${formatCurrency(totalProfit)}</p>${maturityInfoHTML}${claimButtonHTML}</div>`;
-        }
-        function claimFixDeposit(bankName, index) {
-            const account = gameState.openedAccounts[bankName];
-            const fd = account.fixDeposits[index];
-            if (!fd || gameState.gameDaysElapsed < fd.maturityDay || fd.claimed) return;
-            const totalProfit = fd.amount * (fd.rate / 100) * (fdTiers.find(t => t.tenure === fd.tenure).months / 12);
-            const claimAmount = fd.amount + totalProfit;
-            gameState.cash += claimAmount;
-            account.fixDeposits.splice(index, 1);
-            showNotification(`${formatCurrency(claimAmount)} has been added to your cash balance.`, 3000, true);
-            showBankDetails(bankName);
-            updateAllUI();
-        }
-
-        // --- Core Game Logic ---
-        function openAccount(bankName) {
-            const fee = 1000;
-            if (gameState.cash >= fee) {
-                gameState.cash -= fee;
-                gameState.openedAccounts[bankName] = { balance: 0 };
-                letterModal.classList.add('hidden');
-                showNotification(`Congratulations! Your ${bankName} account is open.`, 3000, true);
-                showBankDetails(bankName);
-                updateAllUI();
-            } else {
-                letterModal.classList.add('hidden');
-                showNotification('Insufficient funds to open an account.', 2000, false);
-            }
-        }
-        function simulateMarketAndCardUsage() {
-            if (gameState.investingAmount > 0) {
-                const investFluctuation = (Math.random() * 1.2) - 0.5;
-                gameState.investingAmount += gameState.investingAmount * (investFluctuation / 100);
-                gameState.investingCumulativeRoi += investFluctuation; 
-            }
-            if (gameState.businessAmount > 0) {
-                const businessFluctuation = (Math.random() * 1.2) - 0.3;
-                gameState.businessAmount += gameState.businessAmount * (businessFluctuation / 100);
-                gameState.businessCumulativeRoi += businessFluctuation;
-            }
-            for (const bankName in gameState.openedAccounts) {
-                const account = gameState.openedAccounts[bankName];
-                if (account.cards) {
-                    account.cards.forEach(card => {
-                        if (card.type === 'credit' && Math.random() < 0.1) {
-                            const itemPrice = Math.floor(Math.random() * 200) + 20;
-                            if (!card.outstandingBalance) card.outstandingBalance = 0;
-                            card.outstandingBalance += itemPrice;
-                            if (!card.transactions) card.transactions = [];
-                            card.transactions.push({ item: "Online Purchase", amount: itemPrice, date: new Date() });
-                        }
-                    });
-                }
-            }
-            let needsRefresh = !document.getElementById('bank-details-screen').classList.contains('hidden');
-            if (needsRefresh) {
-                showBankDetails(bankDetailsName.textContent);
-            }
-            updateAllUI();
-        }
-        function calculateEMI(p, r, n) { const monthlyRate = r / (12 * 100); return (p * monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1); }
-        function showLoanOptions(bankName) {
-            bankDetailsName.textContent = 'Apply for a Loan';
-            backToListButton.onclick = () => showBankDetails(bankName);
-            bankDetailsContent.innerHTML = '<div class="w-full space-y-3"></div>';
-            const container = bankDetailsContent.querySelector('div');
-            const loanAmounts = [10000, 30000, 50000, 100000, 200000];
-            loanAmounts.forEach(amount => {
-                const button = document.createElement('button');
-                button.className = 'w-full p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600';
-                button.textContent = `Get a ${formatCurrency(amount)} Loan`;
-                button.addEventListener('click', () => showLoanLetter(amount, bankName));
-                container.appendChild(button);
-            });
-        }
-        function showLoanLetter(amount, bankName) {
-            const interestRates = { 1: 10, 2: 11, 3: 12, 4: 13, 5: 14 };
-            let tableRows = '';
-            for (const year in interestRates) {
-                const rate = interestRates[year];
-                const months = year * 12;
-                const emi = calculateEMI(amount, rate, months);
-                const totalRepayment = emi * months;
-                const totalInterest = totalRepayment - amount;
-                tableRows += `<tr class="border-b border-gray-700"><td class="p-2 text-center">${year}y</td><td class="p-2 text-center">${rate}%</td><td class="p-2 text-center">${formatCurrency(emi)}</td><td class="p-2 text-center">${formatCurrency(totalRepayment)}</td><td class="p-2 text-center text-red-400">${formatCurrency(totalInterest)}</td></tr>`;
-            }
-            loanSummaryContent.innerHTML = `<h3 class="text-xl font-bold text-center mb-2">Loan Summary</h3><div class="text-sm space-y-1 mb-4"><p><strong>Loan Amount:</strong> ${formatCurrency(amount)}</p></div><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-gray-700"><th class="p-2">Tenure</th><th class="p-2">Rate</th><th class="p-2">EMI</th><th class="p-2">Total Pay</th><th class="p-2">Interest</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
-            loanLetterAgreeButton.onclick = () => takeLoan(amount, bankName);
-            loanLetterModal.classList.remove('hidden');
-        }
-        function takeLoan(amount, bankName) {
-            gameState.cash += amount;
-            if (!gameState.openedAccounts[bankName].loans) gameState.openedAccounts[bankName].loans = [];
-            gameState.openedAccounts[bankName].loans.push({ amount, date: new Date() });
-            loanLetterModal.classList.add('hidden');
-            showNotification(`Congratulations! A loan of ${formatCurrency(amount)} has been credited.`, 3000, true);
-            showBankDetails(bankName);
-            updateAllUI();
-        }
-
-        // --- Event Delegation for Dynamic Content ---
-        document.body.addEventListener('click', function(event) {
-            if (event.target.classList.contains('claim-fd-btn')) {
-                const bankName = event.target.dataset.bank;
-                const index = parseInt(event.target.dataset.index, 10);
-                claimFixDeposit(bankName, index);
-            }
-        });
-
-        // --- Event Listeners ---
-        bankButton.addEventListener('click', showBankList);
-        investingNavBtn.addEventListener('click', () => showScreen('investing-screen'));
-        backToMainButton.addEventListener('click', () => showScreen('main-game-container'));
-        backToMainFromInvest.addEventListener('click', () => showScreen('main-game-container'));
-        backToListButton.addEventListener('click', showBankList);
-        letterCancelButton.addEventListener('click', () => letterModal.classList.add('hidden'));
-        loanLetterCancelButton.addEventListener('click', () => loanLetterModal.classList.add('hidden'));
-        cardLetterCancelButton.addEventListener('click', () => cardLetterModal.classList.add('hidden'));
-        fdCancel.addEventListener('click', () => fixDepositModal.classList.add('hidden'));
-        myStockPortfolioBtn.addEventListener('click', () => showNotification('Portfolio details coming soon!'));
-        stockMarketBtn.addEventListener('click', () => showNotification('Stock Market coming soon!'));
-        investTabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                investTabBtns.forEach(b => b.classList.remove('text-blue-600', 'border-blue-600', 'font-semibold'));
-                btn.classList.add('text-blue-600', 'border-blue-600', 'font-semibold');
-                investmentSlider.style.transform = `translateX(-${parseInt(btn.dataset.index) * 100 / 3}%)`;
-            });
-        });
-
-        // --- Initial Load ---
-        window.onload = () => {
-            updateAllUI();
-            updateGameTime();
-            setInterval(updateGameTime, 1000);
-            setInterval(simulateMarketAndCardUsage, 3000);
-        };
-    </script>
-</body>
-</html>
+export default App;
